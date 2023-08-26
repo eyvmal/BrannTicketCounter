@@ -1,9 +1,22 @@
 # BrannTicketCounter
-This python script will NOT help buy you tickets.
-It's made for getting information about ticket sales
+This python script will NOT buy you any tickets.
+It's made for gathering information about ticket sales
 and posting it to Twitter.
 
-# Installation
+The program counts available tickets to all upcoming matches.
+It will automatically exclude all standing sections when
+it's a UEFA match as they are prohibited.
+
+It's not possible to calculate how many tickets are sold
+in the standing sections. "Store Stå" is therefore calculated
+based on the % of the "Frydenbø"-sections total sales. For example
+if "Frydenbø" is 50% sold out, the script will add 50% of the
+capacity of "Store Stå" to the tickets sold.
+
+I'm not yet sure how to add the same for the standing sections
+on the "Fjordkraft"-section. I'll have to do some testing.
+
+# Installation and setup
 To set it up you'll have to add your own keys and tokens
 if you want it to create Twitter posts.
 
@@ -21,7 +34,7 @@ TWITTER_ACCESS_TOKEN_SECRET="your_key"
 if you want to use your own solution,
 you'll want to edit the twitter.py file.
 
-# Code
+# The Code
 The scrape_tools.py is a mess, but works
 and I have added comments throughtout the code
 to make it more readable.
