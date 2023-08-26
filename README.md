@@ -1,11 +1,11 @@
 # BrannTicketCounter
-This python script can NOT buy you tickets.
-It's made for scraping information about ticket sales.
-
+This python script will NOT help buy you tickets.
+It's made for getting information about ticket sales
+and posting it to Twitter.
 
 # Installation
-To set it up you have to add your own keys and tokens for the
-Twitter account to be used in the twitter.py file.
+To set it up you'll have to add your own keys and tokens
+if you want it to create Twitter posts.
 
 I have it set up to automatically read and use matching keys in a .env file.
 If you want to do the same, follow these steps:
@@ -18,7 +18,8 @@ TWITTER_BEARER_TOKEN="your_key"
 TWITTER_ACCESS_TOKEN="your_key"
 TWITTER_ACCESS_TOKEN_SECRET="your_key"
 ```
-- And finally install all dependencies using pip
+if you want to use your own solution,
+you'll want to edit the twitter.py file.
 
 # Code
 The scrape_tools.py is a mess, but works
