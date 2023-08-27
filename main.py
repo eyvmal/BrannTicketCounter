@@ -3,9 +3,6 @@ from scrape_tools import *
 from imagify import *
 from twitter import *
 
-SAVE_PATH = os.path.dirname(os.path.abspath(__file__)) + "/"
-IMAGE_PATH = "imagify/brann_logo.jpeg"  # Path from this file
-
 # Updates and fetches upcoming events
 update_events("all")
 ticket_strings = get_ticket_sales()
@@ -14,9 +11,12 @@ ticket_strings = get_ticket_sales()
 iteration = 0
 image_paths = []
 for text in ticket_strings:
+    header = text.split('\n')[0].lower()
+    image_path = get_image(header)
+
     image_name = "ticket_sale_result" + str(iteration) + ".jpg"
 
-    image_object = Imagify(os.path.join(SAVE_PATH + IMAGE_PATH), text).generate()
+    image_object = Imagify(os.path.join(image_path), text).generate()
     image_object.save(image_name, quality=90)
     iteration += 1
     image_paths.append(image_name)

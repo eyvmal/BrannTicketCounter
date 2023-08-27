@@ -15,7 +15,7 @@ FONT_PATH = "imagify/SFMonoRegular.otf"  # Path from this file
 
 class Imagify:
     BACKGROUND_COLOR = (227, 26, 34)  # Red color as RGB tuple
-    TEXT_COLOR = (255, 255, 255)      # White color as RGB tuple
+    TEXT_COLOR = (255, 255, 255)  # White color as RGB tuple
 
     def __init__(self, image_path, caption):
         self.image_path = image_path
@@ -25,7 +25,7 @@ class Imagify:
         print("Generating image... ", end="")
         image = self._get_image_object()
         text_image = get_text_as_image(
-            self.caption, text_color=self.TEXT_COLOR, text_size=100, image_width=image.size[0],
+            self.caption, text_color=self.TEXT_COLOR, text_size=95, image_width=image.size[0],
             background_color=self.BACKGROUND_COLOR)
         image = bottom_expand_image_with_image(image, text_image, background_color=self.BACKGROUND_COLOR)
         image = draw_border(image, border_size=10, border_color=self.BACKGROUND_COLOR)
@@ -51,6 +51,7 @@ def get_text_as_image(text, text_color, text_size, image_width, background_color
     draw_canvas = PIL.ImageDraw.Draw(placeholder)
     text_width, text_height = draw_canvas.textsize(text, font=font)
     if text_width > image_width:
+        print("Text too big")
         character_width = text_width / len(text)
         max_characters_count = int(image_width / character_width)
         text_lines = wrap_text(text, wrap_width=max_characters_count)
@@ -86,3 +87,40 @@ def wrap_text(text, wrap_width):
 def get_font(size):
     path = os.path.join(SAVE_PATH + FONT_PATH)
     return PIL.ImageFont.truetype(path, size=size)
+
+
+def get_image(line):
+    if "aalesund" in line or "ålesund" in line:
+        return SAVE_PATH + "imagify/aalesund.png"
+    elif "bodø" in line:
+        return SAVE_PATH + "imagify/bodoglimt.png"
+    elif "godset" in line:
+        return SAVE_PATH + "imagify/godset.png"
+    elif "hamar" in line:
+        return SAVE_PATH + "imagify/hamkam.png"
+    elif "haugesund" in line:
+        return SAVE_PATH + "imagify/haugesund.png"
+    elif "lillestrøm" in line:
+        return SAVE_PATH + "imagify/lillestrøm.png"
+    elif "molde" in line:
+        return SAVE_PATH + "imagify/molde.png"
+    elif "odd" in line:
+        return SAVE_PATH + "imagify/odd.png"
+    elif "rosenborg" in line:
+        return SAVE_PATH + "imagify/rosenborg.png"
+    elif "sandefjord" in line:
+        return SAVE_PATH + "imagify/sandefjord.png"
+    elif "sarpsborg" in line:
+        return SAVE_PATH + "imagify/sarpsborg.png"
+    elif "stabæk" in line:
+        return SAVE_PATH + "imagify/stabek.png"
+    elif "tromsø" in line:
+        return SAVE_PATH + "imagify/tromso.png"
+    elif "vålrenga" in line:
+        return SAVE_PATH + "imagify/valrengen.png"
+    elif "viking" in line:
+        return SAVE_PATH + "imagify/viking.png"
+    elif "alkmaar" in line:
+        return SAVE_PATH + "imagify/alkmaar.png"
+    else:
+        return SAVE_PATH + "imagify/brann_logo.jpeg"

@@ -248,7 +248,7 @@ def get_ticket_sales():
         json_file = get_latest_file(get_directory(event["event_name"]))
         result = get_tickets(json_file, event["event_name"])
 
-        return_value = "\n" + event["event_name"] + "\n\n"
+        return_value = event["event_name"] + "\n\n"
 
         for c, d in result.items():
             # sold_seats = d['sold_seats']
