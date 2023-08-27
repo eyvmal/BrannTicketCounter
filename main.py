@@ -23,5 +23,5 @@ for text in ticket_strings:
 
 # Tweets all ticket-info-pictures with custom header
 tweet_header = ("Info om billettsalget for brann sine kommende hjemmekamper!"
-                "\n(Ekskl. bortefelt + fjordkraft sin ståtribune)")
+                "\n(Ekskl. bortefelt & fjordkraft sin ståtribune)")
 create_tweet(tweet_header, image_paths)

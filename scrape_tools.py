@@ -191,12 +191,12 @@ def get_tickets(json_file, event_name):
     json_file = [section for section in json_file if section["sold_seats"] != 0 or section["available_seats"] != 0]
 
     for section in json_file:
-        sold_seats = section["sold_seats"]
-        total_capacity = section["section_amount"]
-        available_seats = section["available_seats"]
-        category_totals["TOTALT"]["sold_seats"] += sold_seats
-        category_totals["TOTALT"]["section_amount"] += total_capacity
-        category_totals["TOTALT"]["available_seats"] += available_seats
+        section_name = section["section_name"].lower()
+        if "fjordkraft" in section_name and "felt b" in section_name:
+            continue
+        category_totals["TOTALT"]["sold_seats"] += section["sold_seats"]
+        category_totals["TOTALT"]["section_amount"] += section["section_amount"]
+        category_totals["TOTALT"]["available_seats"] += section["available_seats"]
 
     for section in json_file:
         section_name = section["section_name"].lower()
@@ -220,7 +220,7 @@ def get_tickets(json_file, event_name):
             category_totals["FRYDENBØ"]["sold_seats"] += sold_seats
             category_totals["FRYDENBØ"]["section_amount"] += total_capacity
             category_totals["FRYDENBØ"]["available_seats"] += available_seats
-        elif "fjordkraft" in section_name:
+        elif "fjordkraft" in section_name and "felt b" not in section_name:
             category_totals["FJORDKRAFT"]["sold_seats"] += sold_seats
             category_totals["FJORDKRAFT"]["section_amount"] += total_capacity
             category_totals["FJORDKRAFT"]["available_seats"] += available_seats
