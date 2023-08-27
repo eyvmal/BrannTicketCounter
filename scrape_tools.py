@@ -22,7 +22,7 @@ def get_directory(event_name):
 
 def get_time_formatted(computer_or_human):
     # Get the local time zone for Norway
-    norway_timezone = pytz.timezone('Europe/Oslo')
+    norway_timezone = pytz.timezone("Europe/Oslo")
     current_datetime = datetime.datetime.now(norway_timezone)
 
     if computer_or_human.lower() == "computer":  # Used to save files locally
@@ -104,7 +104,8 @@ def get_ticket_info(event_url, event_name):
     print("")  # debug
     # Get directory to save results
     dir_path = get_directory(event_name)
-    filename = f"results_" + get_time_formatted("computer") + ".json"
+    time_now = get_time_formatted("computer")
+    filename = f"results_{time_now}.json"
 
     # Save results to a JSON file with the formatted datetime in the specified directory
     file_path = os.path.join(dir_path, filename)
@@ -249,8 +250,8 @@ def get_ticket_sales():
 
         for c, d in result.items():
             # sold_seats = d['sold_seats']
-            available_seats = d['available_seats']
-            total_capacity = d['section_amount']
+            available_seats = d["available_seats"]
+            total_capacity = d["section_amount"]
             sold_seats = total_capacity - available_seats
             percentage_sold = (sold_seats / total_capacity) * 100 if total_capacity != 0 else 0
 
