@@ -9,6 +9,9 @@ import PIL.ImageFont
 # Copy of code found here: https://rk.edu.pl/en/generating-memes-and-infographics-with-pillow/
 # Used to add text under a logo image
 
+SAVE_PATH = os.path.dirname(os.path.abspath(__file__)) + "/"
+FONT_PATH = "imagify/SFMonoRegular.otf"  # Path from this file
+
 
 class Imagify:
     BACKGROUND_COLOR = (227, 26, 34)  # Red color as RGB tuple
@@ -81,5 +84,5 @@ def wrap_text(text, wrap_width):
 
 
 def get_font(size):
-    path = os.path.join('imagify/SFMonoRegular.otf')
+    path = os.path.join(SAVE_PATH + FONT_PATH)
     return PIL.ImageFont.truetype(path, size=size)

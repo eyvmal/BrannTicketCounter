@@ -7,14 +7,14 @@ import json
 import os
 
 HOMEPAGE_URL = "https://brann.ticketco.events/no/nb"
+SAVE_PATH = os.path.dirname(os.path.abspath(__file__)) + "/"
 
 
 def get_directory(event_name):
     # Remove characters that are not allowed in directory names and remove spaces
-    valid_dir_name = re.sub(r'[<>:"/\\|?*]', '', event_name)
-    valid_dir_name = valid_dir_name.replace(' ', '')
+    valid_dir_name = re.sub(r'[<>:"/\\|?*]', '', event_name).replace(' ', '')
+    valid_dir_name = os.path.join(SAVE_PATH, valid_dir_name)
 
-    # Check if the directory already exists, if not, create it
     if not os.path.exists(valid_dir_name):
         os.makedirs(valid_dir_name)
     return valid_dir_name
@@ -26,22 +26,26 @@ def get_time_formatted(computer_or_human):
     current_datetime = datetime.datetime.now(norway_timezone)
 
     if computer_or_human.lower() == "computer":  # Used to save files locally
-        formatted_datetime = current_datetime.strftime("%Y-%m-%d_%H-%M-%S")
+        return str(current_datetime.strftime("%Y-%m-%d_%H-%M-%S"))
     else:  # Else for human readability
-        formatted_datetime = current_datetime.strftime("%H:%M %d/%m/%Y")
-    return str(formatted_datetime)
+        return str(current_datetime.strftime("%H:%M %d/%m/%Y"))
+
+
+def fetch_url(url):
+    try:
+        response = requests.get(url)
+        response.raise_for_status()
+        return response
+    except requests.exceptions.RequestException as e:
+        print("An error occurred:", e)
+        return None
 
 
 def get_ticket_info(event_url, event_name):
     # Scrape the .json file from the event page
     json_url = event_url + "item_types.json"
     print("Updating ticket information for: " + event_name)  # Debug
-    response = ""
-    try:
-        response = requests.get(json_url)
-        response.raise_for_status()
-    except requests.exceptions.RequestException as e:
-        print("An error occurred:", e)
+    response = fetch_url(json_url)
     json_data = response.json()
 
     # Get all stadium sections where tickets are sold
@@ -56,12 +60,7 @@ def get_ticket_info(event_url, event_name):
     for section in sections:
         # Get json for this section
         json_url = event_url + "sections/" + str(section) + ".json"
-        response = ""
-        try:
-            response = requests.get(json_url)
-            response.raise_for_status()
-        except requests.exceptions.RequestException as e:
-            print("An error occurred:", e)
+        response = fetch_url(json_url)
         json_data = response.json()
 
         # Saves name, id and number of available seats remaining
@@ -111,21 +110,14 @@ def get_ticket_info(event_url, event_name):
     file_path = os.path.join(dir_path, filename)
     with open(file_path, "w") as json_file:
         json.dump(results, json_file)
-    print("File saved as: " + filename + " in directory: " + dir_path + "/\n")
 
-    # Return the file_path in case I want to use it right away
-    return file_path
+    print(f"File saved as: {filename} in directory: {dir_path}/\n")
 
 
 def get_event_info(url, next_or_all):
     # Get HTML
     print("Fetching " + url)
-    response = ""
-    try:
-        response = requests.get(url)
-        response.raise_for_status()
-    except requests.exceptions.RequestException as e:
-        print("An error occurred:", e)
+    response = fetch_url(url)
     soup = BeautifulSoup(response.text, "html.parser")
 
     # Find the URLs for the event pages
@@ -141,12 +133,7 @@ def get_event_info(url, next_or_all):
         filtered_href_values = [filtered_href_values[0]]
 
     for url in filtered_href_values:
-        response = ""
-        try:
-            response = requests.get(url)
-            response.raise_for_status()
-        except requests.exceptions.RequestException as e:
-            print("An error occurred:", e)
+        response = fetch_url(url)
         soup = BeautifulSoup(response.text, "html.parser")
 
         event_name = soup.find("h1", class_="page-title")
@@ -272,7 +259,8 @@ def get_ticket_sales():
                 return_value += "\n"
 
             return_value += f"{c.ljust(10)} {f'{sold_seats}/{total_capacity}'.ljust(11)} ({percentage_sold:.1f}%)\n"
-        return_value += "\n\nOppdatert: " + get_time_formatted("human") + "\n"
+        time_now = get_time_formatted("human")
+        return_value += f"\n\nOppdatert: {time_now}\n"
         results.append(return_value)
 
     return results
