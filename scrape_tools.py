@@ -69,7 +69,7 @@ def get_ticket_info(event_url, event_name):
         section_id = section
         if "STÅ" in section_name:  # Special treatment for standing sections
             # Have to check later if this changes when the section is sold out or not
-            status = json_data["seating_arrangements"]["areas"][0]["status"]
+            # status = json_data["seating_arrangements"]["areas"][0]["status"]
             # print("\nDEBUG: " + str(section_name) + ", status: " + str(status))
             num_sold_seats = 0
             num_available_seats = 0
@@ -177,8 +177,6 @@ def get_tickets(json_file, event_name):
     # to filter out the prohibited sections from the calculations
     europa = False
     if "conference" in event_name_lower or "europa" in event_name_lower or "champions" in event_name_lower:
-        json_file = [section for section in json_file if
-                     section["sold_seats"] != 0 or section["available_seats"] != 0]
         europa = True  # Used in an if statement later on
 
     category_totals = {
@@ -189,6 +187,8 @@ def get_tickets(json_file, event_name):
         "VIP": {"sold_seats": 0, "section_amount": 0, "available_seats": 0},
         "TOTALT": {"sold_seats": 0, "section_amount": 0, "available_seats": 0}
     }
+    # Remove all sections where no seats are available AND no are sold (All standing sections + away section).
+    json_file = [section for section in json_file if section["sold_seats"] != 0 or section["available_seats"] != 0]
 
     for section in json_file:
         sold_seats = section["sold_seats"]
@@ -235,6 +235,8 @@ def get_tickets(json_file, event_name):
                            2)
         category_totals["FRYDENBØ"]["sold_seats"] += round(1200 * percentage)
         category_totals["FRYDENBØ"]["section_amount"] += 1200
+        category_totals["TOTALT"]["sold_seats"] += round(1200 * percentage)
+        category_totals["TOTALT"]["section_amount"] += 1200
     return category_totals
 
 
