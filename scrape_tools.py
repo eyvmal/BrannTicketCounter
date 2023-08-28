@@ -95,7 +95,7 @@ def get_ticket_info(event_url, event_name):
             # For statistics :)
             locked_seats = [seat for seat in json_data["seating_arrangements"]["seats"] if
                             seat["status"] == "locked"]
-            num_locked_seats = len(sold_seats)
+            num_locked_seats = len(locked_seats)
 
         # Save section info as dictionary
         section_info = {
