@@ -73,6 +73,8 @@ def get_ticket_info(event_url, event_name):
             # print("\nDEBUG: " + str(section_name) + ", status: " + str(status))
             num_sold_seats = 0
             num_available_seats = 0
+            num_locked_seats = 0
+            available_seats = []
         else:
             # Extract seats with status "sold"
             sold_seats = [seat for seat in json_data["seating_arrangements"]["seats"] if
@@ -84,13 +86,26 @@ def get_ticket_info(event_url, event_name):
                                seat["status"] == "available"]
             num_available_seats = len(available_seats)
 
+            # Count phantom seats and deduct them from section
+            phantom_seats = [seat for seat in json_data["seating_arrangements"]["seats"] if
+                             float(seat["x"]) <= 0 and seat["status"] == "available"]
+            num_available_seats -= len(phantom_seats)
+            section_amount -= len(phantom_seats)
+
+            # For statistics :)
+            locked_seats = [seat for seat in json_data["seating_arrangements"]["seats"] if
+                            seat["status"] == "locked"]
+            num_locked_seats = len(sold_seats)
+
         # Save section info as dictionary
         section_info = {
             "section_name": section_name,
             "section_id": section_id,
             "section_amount": section_amount,
             "sold_seats": num_sold_seats,
-            "available_seats": num_available_seats
+            "available_seats": num_available_seats,
+            "locked_seats": num_locked_seats,
+            "available_seats_object": available_seats
         }
 
         # Append the section_info to results
