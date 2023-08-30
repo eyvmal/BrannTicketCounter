@@ -11,6 +11,7 @@ import PIL.ImageFont
 
 SAVE_PATH = os.path.dirname(os.path.abspath(__file__)) + "/"
 FONT_PATH = "imagify/SFMonoRegular.otf"  # Path from this file
+SERIEN = "Eliteserien 2023"
 
 
 class Imagify:
@@ -90,37 +91,58 @@ def get_font(size):
 
 
 def get_image(line):
-    if "aalesund" in line or "ålesund" in line:
-        return SAVE_PATH + "imagify/aalesund.png"
-    elif "bodø" in line:
-        return SAVE_PATH + "imagify/bodoglimt.png"
-    elif "godset" in line:
-        return SAVE_PATH + "imagify/godset.png"
-    elif "hamar" in line:
-        return SAVE_PATH + "imagify/hamkam.png"
-    elif "haugesund" in line:
-        return SAVE_PATH + "imagify/haugesund.png"
-    elif "lillestrøm" in line:
-        return SAVE_PATH + "imagify/lillestrøm.png"
-    elif "molde" in line:
-        return SAVE_PATH + "imagify/molde.png"
-    elif "odd" in line:
-        return SAVE_PATH + "imagify/odd.png"
-    elif "rosenborg" in line:
-        return SAVE_PATH + "imagify/rosenborg.png"
-    elif "sandefjord" in line:
-        return SAVE_PATH + "imagify/sandefjord.png"
-    elif "sarpsborg" in line:
-        return SAVE_PATH + "imagify/sarpsborg.png"
-    elif "stabæk" in line:
-        return SAVE_PATH + "imagify/stabek.png"
-    elif "tromsø" in line:
-        return SAVE_PATH + "imagify/tromso.png"
-    elif "vålrenga" in line:
-        return SAVE_PATH + "imagify/valrengen.png"
-    elif "viking" in line:
-        return SAVE_PATH + "imagify/viking.png"
-    elif "alkmaar" in line:
-        return SAVE_PATH + "imagify/alkmaar.png"
+    line_lower = line.lower()
+    if "aalesund" in line_lower or "ålesund" in line_lower:
+        return SAVE_PATH + "imagify/aalesund.png", f"Brann - Aalesund, {SERIEN}"
+    elif "bodø" in line_lower:
+        return SAVE_PATH + "imagify/bodoglimt.png", f"Brann - Bodø/Glimt, {SERIEN}"
+    elif "godset" in line_lower:
+        return SAVE_PATH + "imagify/godset.png", f"Brann - Strømsgodset, {SERIEN}"
+    elif "hamkam" in line_lower or "hamar" in line_lower:
+        return SAVE_PATH + "imagify/hamkam.png", f"Brann - HamKam, {SERIEN}"
+    elif "haugesund" in line_lower:
+        return SAVE_PATH + "imagify/haugesund.png", f"Brann - Haugesund, {SERIEN}"
+    elif "lillestrøm" in line_lower:
+        return SAVE_PATH + "imagify/lillestrom.png", f"Brann - Lillestrøm, {SERIEN}"
+    elif "molde" in line_lower:
+        return SAVE_PATH + "imagify/molde.png", f"Brann - Molde, {SERIEN}"
+    elif "odd" in line_lower:
+        return SAVE_PATH + "imagify/odd.png", f"Brann - Odd, {SERIEN}"
+    elif "rosenborg" in line_lower:
+        return SAVE_PATH + "imagify/rosenborg.png", f"Brann - Rosenborg, {SERIEN}"
+    elif "sandefjord" in line_lower:
+        return SAVE_PATH + "imagify/sandefjord.png", f"Brann - Sandefjord, {SERIEN}"
+    elif "sarpsborg" in line_lower:
+        return SAVE_PATH + "imagify/sarpsborg.png", f"Brann - Sarpsborg, {SERIEN}"
+    elif "stabæk" in line_lower:
+        return SAVE_PATH + "imagify/stabek.png", f"Brann - Stabæk, {SERIEN}"
+    elif "tromsø" in line_lower:
+        return SAVE_PATH + "imagify/tromso.png", f"Brann - Tromsø, {SERIEN}"
+    elif "vålerenga" in line_lower:
+        return SAVE_PATH + "imagify/valrengen.png", f"Brann - Vålerenga, {SERIEN}"
+    elif "viking" in line_lower:
+        return SAVE_PATH + "imagify/viking.png", f"Brann - Viking, {SERIEN}"
+    elif "alkmaar" in line_lower:
+        return SAVE_PATH + "imagify/alkmaar.png", "Brann - AZ Alkmaar, Conference League"
     else:
-        return SAVE_PATH + "imagify/brann_logo.jpeg"
+        return SAVE_PATH + "imagify/brann_logo.jpeg", line
+
+
+def generate_images(strings):
+    iteration = 0
+    image_paths = []
+    for string in strings:
+        # Split the string in lines and use the first line to fetch image_path and a custom header
+        lines = string.splitlines()
+        image_path, lines[0] = get_image(str(lines[0]))
+        modified_string = '\n'.join(lines)
+
+        # Image output name
+        image_name = "ticket_sale_result" + str(iteration) + ".jpg"
+
+        # Create the images using the image path and the modified_string
+        image_object = Imagify(os.path.join(image_path), modified_string).generate()
+        image_object.save(image_name, quality=90)
+        iteration += 1
+        image_paths.append(image_name)
+    return image_paths
