@@ -11,8 +11,8 @@ SAVE_PATH = os.path.dirname(os.path.abspath(__file__)) + "/"
 
 
 # The main method for updating and fetching new ticket info
-def update_events(next_or_all):
-    if next_or_all.lower() == "next":
+def update_events(option):
+    if option.lower() == "next":
         print("Starting update of the next event... ")
         event_list = get_upcoming_events("next")
     else:
@@ -21,7 +21,10 @@ def update_events(next_or_all):
 
     path_to_tickets = []
     for event in event_list:
-        path_to_tickets.append(get_ticket_info(event["link"], event["title"], event["time"]))
+        if "none" in option.lower():
+            path_to_tickets.append(get_directory_path(str(event["title"])))
+        else:
+            path_to_tickets.append(get_ticket_info(event["link"], event["title"], event["time"]))
 
     finalized_strings = []
     for path in path_to_tickets:
@@ -156,9 +159,9 @@ def get_section_tickets(section, event_url):
     }
 
 
-def save_new_json(event_name, file):
+def save_new_json(event_title, file):
     # Get directory to save results
-    dir_path = get_directory_path(event_name)
+    dir_path = get_directory_path(event_title)
     time_now = get_time_formatted("computer")
     filename = f"results_{time_now}.json"
 
@@ -269,6 +272,7 @@ def save_minimal_info(json_file, event_title, event_date):
 def get_latest_file(dir_path):
     files = os.listdir(dir_path)
     sorted_files = sorted(files, key=lambda x: os.path.getmtime(os.path.join(dir_path, x)), reverse=True)
+    print(str(sorted_files))
     if len(sorted_files) > 1:
         latest_file_path = os.path.join(dir_path, sorted_files[0])
         prior_file_path = os.path.join(dir_path, sorted_files[1])
@@ -307,11 +311,11 @@ def create_string(file_path):
             prior_available_seats = prior[c]["available_seats"]
             prior_sold_seats = total_capacity - prior_available_seats
             prior_percentage_sold = (prior_sold_seats / total_capacity) * 100 if total_capacity != 0 else 0
-            diff_percentage = round(percentage_sold - prior_percentage_sold, 1)
-            return_value += f"{c.ljust(10)} {f'{sold_seats}/{total_capacity}'.ljust(11)}" \
-                            f"{percentage_sold:.1f}% ({diff_percentage:+.1f}%)\n"
+            diff_percentage = percentage_sold - prior_percentage_sold
+            return_value += f"{c.ljust(10)} {f'{sold_seats}/{total_capacity}'.ljust(12)}" \
+                            f"{f'{percentage_sold:.1f}%'.ljust(6)} ({diff_percentage:+.1f}%)\n"
         else:
-            return_value += f"{c.ljust(10)} {f'{sold_seats}/{total_capacity}'.ljust(11)} ({percentage_sold:.1f})%\n"
+            return_value += f"{c.ljust(10)} {f'{sold_seats}/{total_capacity}'.ljust(12)} {percentage_sold:.1f}%\n"
     time_now = get_time_formatted("human")
-    return_value += f"\n\nOppdatert: {time_now}\n"
+    return_value += f"\n\nOppdatert: {time_now}\n "
     return return_value

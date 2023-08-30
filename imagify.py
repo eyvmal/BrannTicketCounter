@@ -113,7 +113,7 @@ def get_image(line):
     elif "sandefjord" in line_lower:
         return SAVE_PATH + "imagify/sandefjord.png", f"Brann - Sandefjord, {SERIEN}"
     elif "sarpsborg" in line_lower:
-        return SAVE_PATH + "imagify/sarpsborg.png", f"Brann - Sarpsborg, {SERIEN}"
+        return SAVE_PATH + "imagify/sarpsborg.png", f"{SERIEN}: Brann - Sarpsborg"
     elif "stabæk" in line_lower:
         return SAVE_PATH + "imagify/stabek.png", f"Brann - Stabæk, {SERIEN}"
     elif "tromsø" in line_lower:
@@ -123,7 +123,7 @@ def get_image(line):
     elif "viking" in line_lower:
         return SAVE_PATH + "imagify/viking.png", f"Brann - Viking, {SERIEN}"
     elif "alkmaar" in line_lower:
-        return SAVE_PATH + "imagify/alkmaar.png", "Brann - AZ Alkmaar, Conference League"
+        return SAVE_PATH + "imagify/alkmaar.png", "Conference League: Brann - AZ Alkmaar"
     else:
         return SAVE_PATH + "imagify/brann_logo.png", line
 
