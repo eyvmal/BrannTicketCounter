@@ -93,37 +93,37 @@ def get_font(size):
 def get_image(line):
     line_lower = line.lower()
     if "aalesund" in line_lower or "ålesund" in line_lower:
-        return SAVE_PATH + "imagify/aalesund.png", f"Brann - Aalesund, {SERIEN}"
+        return SAVE_PATH + "imagify/aalesund.png", f"Brann - Aalesund"
     elif "bodø" in line_lower:
-        return SAVE_PATH + "imagify/bodoglimt.png", f"Brann - Bodø/Glimt, {SERIEN}"
+        return SAVE_PATH + "imagify/bodoglimt.png", f"Brann - Bodø/Glimt"
     elif "godset" in line_lower:
-        return SAVE_PATH + "imagify/godset.png", f"Brann - Strømsgodset, {SERIEN}"
+        return SAVE_PATH + "imagify/godset.png", f"Brann - Strømsgodset"
     elif "hamkam" in line_lower or "hamar" in line_lower:
-        return SAVE_PATH + "imagify/hamkam.png", f"Brann - HamKam, {SERIEN}"
+        return SAVE_PATH + "imagify/hamkam.png", f"Brann - HamKam"
     elif "haugesund" in line_lower:
-        return SAVE_PATH + "imagify/haugesund.png", f"Brann - Haugesund, {SERIEN}"
+        return SAVE_PATH + "imagify/haugesund.png", f"Brann - Haugesund"
     elif "lillestrøm" in line_lower:
-        return SAVE_PATH + "imagify/lillestrom.png", f"Brann - Lillestrøm, {SERIEN}"
+        return SAVE_PATH + "imagify/lillestrom.png", f"Brann - Lillestrøm"
     elif "molde" in line_lower:
-        return SAVE_PATH + "imagify/molde.png", f"Brann - Molde, {SERIEN}"
+        return SAVE_PATH + "imagify/molde.png", f"Brann - Molde"
     elif "odd" in line_lower:
-        return SAVE_PATH + "imagify/odd.png", f"Brann - Odd, {SERIEN}"
+        return SAVE_PATH + "imagify/odd.png", f"Brann - Odd"
     elif "rosenborg" in line_lower:
-        return SAVE_PATH + "imagify/rosenborg.png", f"Brann - Rosenborg, {SERIEN}"
+        return SAVE_PATH + "imagify/rosenborg.png", f"Brann - Rosenborg"
     elif "sandefjord" in line_lower:
-        return SAVE_PATH + "imagify/sandefjord.png", f"Brann - Sandefjord, {SERIEN}"
+        return SAVE_PATH + "imagify/sandefjord.png", f"Brann - Sandefjord"
     elif "sarpsborg" in line_lower:
-        return SAVE_PATH + "imagify/sarpsborg.png", f"{SERIEN}: Brann - Sarpsborg"
+        return SAVE_PATH + "imagify/sarpsborg.png", f"Brann - Sarpsborg"
     elif "stabæk" in line_lower:
-        return SAVE_PATH + "imagify/stabek.png", f"Brann - Stabæk, {SERIEN}"
+        return SAVE_PATH + "imagify/stabek.png", f"Brann - Stabæk"
     elif "tromsø" in line_lower:
-        return SAVE_PATH + "imagify/tromso.png", f"Brann - Tromsø, {SERIEN}"
+        return SAVE_PATH + "imagify/tromso.png", f"Brann - Tromsø"
     elif "vålerenga" in line_lower:
-        return SAVE_PATH + "imagify/valrengen.png", f"Brann - Vålerenga, {SERIEN}"
+        return SAVE_PATH + "imagify/valrengen.png", f"Brann - Vålerenga"
     elif "viking" in line_lower:
-        return SAVE_PATH + "imagify/viking.png", f"Brann - Viking, {SERIEN}"
+        return SAVE_PATH + "imagify/viking.png", f"Brann - Viking"
     elif "alkmaar" in line_lower:
-        return SAVE_PATH + "imagify/alkmaar.png", "Conference League: Brann - AZ Alkmaar"
+        return SAVE_PATH + "imagify/alkmaar.png", "Brann - AZ Alkmaar"
     else:
         return SAVE_PATH + "imagify/brann_logo.png", line
 
