@@ -269,10 +269,10 @@ def save_minimal_info(json_file, event_title, event_date):
     return category_totals
 
 
+# Returns the two most recently edited files.
 def get_latest_file(dir_path):
     files = os.listdir(dir_path)
     sorted_files = sorted(files, key=lambda x: os.path.getmtime(os.path.join(dir_path, x)), reverse=True)
-    print(str(sorted_files))
     if len(sorted_files) > 1:
         latest_file_path = os.path.join(dir_path, sorted_files[0])
         prior_file_path = os.path.join(dir_path, sorted_files[1])
