@@ -125,7 +125,7 @@ def get_image(line):
     elif "alkmaar" in line_lower:
         return SAVE_PATH + "imagify/alkmaar.png", "Brann - AZ Alkmaar, Conference League"
     else:
-        return SAVE_PATH + "imagify/brann_logo.jpeg", line
+        return SAVE_PATH + "imagify/brann_logo.png", line
 
 
 def generate_images(strings):
