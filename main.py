@@ -11,6 +11,6 @@ if strings:
     tweet_header = ("Info om billettsalget for Brann sine kommende hjemmekamper!"
                     "\nEkskl. bortefelt & fjordkraft sin ståtribune."
                     "\n(Parantesen viser endring siden forrige oppdatering)")
-    # create_tweet(tweet_header, images)
+    create_tweet(tweet_header, images)
 else:
     print("No upcoming events")

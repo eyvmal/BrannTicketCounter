@@ -18,8 +18,6 @@ def update_events(option):
     else:
         print("Starting update of all events... ")
         event_list = get_upcoming_events("all")
-        # event_list = [{"title": "Conference League: SK Brann - AZ Alkmaar",
-        # "time": "imorgen", "link": "https://ticketco.events/no/nb/events/328715/seating_arrangement/"}]
 
     path_to_tickets = []
     for event in event_list:
@@ -275,7 +273,6 @@ def save_minimal_info(json_file, event_title, event_date):
         category_totals["FRYDENBØ"]["sold_seats"] += sold_seats
         category_totals["FRYDENBØ"]["section_amount"] += 1200
         category_totals["FRYDENBØ"]["available_seats"] += 1200 - sold_seats
-        print()
         category_totals["TOTALT"]["sold_seats"] += round(1200 * percentage)
         category_totals["TOTALT"]["section_amount"] += 1200
     print("DONE")
