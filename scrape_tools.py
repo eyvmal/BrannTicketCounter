@@ -12,7 +12,7 @@ SAVE_PATH = os.path.dirname(os.path.abspath(__file__)) + "/"
 
 # The main method for updating and fetching new ticket info
 def update_events(option):
-    if option.lower() == "next":
+    if option.lower() == "next" or option.lower() == "debug":
         print("Starting update of the next event... ")
         event_list = get_upcoming_events("next")
     else:
@@ -25,9 +25,12 @@ def update_events(option):
     for event in event_list:
         if "none" in option.lower():
             path_to_tickets.append(get_directory_path(str(event["title"])))
+        elif "debug" in option.lower():
+            path_to_tickets.append(get_ticket_info(event["link"], event["title"], event["time"], True))
+            print("Debug done.")
+            return None
         else:
-            path_to_tickets.append(get_ticket_info(event["link"], event["title"], event["time"]))
-
+            path_to_tickets.append(get_ticket_info(event["link"], event["title"], event["time"], False))
     finalized_strings = []
     if len(path_to_tickets) == 0:
         return None
@@ -86,7 +89,7 @@ def fetch_url(url):
         return None
 
 
-def get_ticket_info(event_url, event_title, event_date):
+def get_ticket_info(event_url, event_title, event_date, debug):
     # Scrape the .json file from the event page
     json_url = event_url + "item_types.json"
     event_title = str(event_title).replace('\n', "")
@@ -115,6 +118,8 @@ def get_ticket_info(event_url, event_title, event_date):
     # Saving only the necessary info to operate the bot to minimize amount storage
     # If you want all info, save the "results" file instead of mini_results
     mini_results = save_minimal_info(results, event_title, event_date)
+    if debug:
+        return save_new_json("debug", results)
     return save_new_json(event_title, mini_results)
 
 
@@ -132,7 +137,7 @@ def get_section_tickets(section, event_url):
         available_seats = 0
         locked_seats = 0
         phantom_seats = 0
-        seats = None
+        available_seats_object = None
     else:
         # Seat objects
         seats = [seat for seat in json_data["seating_arrangements"]["seats"]]
@@ -141,7 +146,8 @@ def get_section_tickets(section, event_url):
         sold_seats = len([seat for seat in seats if seat["status"] == "sold"])
 
         # Extract seats with status "available"
-        available_seats = len([seat for seat in seats if seat["status"] == "available"])
+        available_seats_object = [seat for seat in seats if seat["status"] == "available"]
+        available_seats = len(available_seats_object)
 
         # For statistics :)
         locked_seats = len([seat for seat in seats if seat["status"] == "locked"])
@@ -159,7 +165,7 @@ def get_section_tickets(section, event_url):
         "available_seats": available_seats,
         "locked_seats": locked_seats,
         "phantom_seats": phantom_seats,
-        "seats:": seats
+        "seats:": available_seats_object
     }
 
 
@@ -265,8 +271,11 @@ def save_minimal_info(json_file, event_title, event_date):
     if europa is False:
         percentage = round((category_totals["FRYDENBØ"]["sold_seats"] / category_totals["FRYDENBØ"]["section_amount"]),
                            2)
-        category_totals["FRYDENBØ"]["sold_seats"] += round(1200 * percentage)
+        sold_seats = round(1200 * percentage)
+        category_totals["FRYDENBØ"]["sold_seats"] += sold_seats
         category_totals["FRYDENBØ"]["section_amount"] += 1200
+        category_totals["FRYDENBØ"]["available_seats"] += 1200 - sold_seats
+        print()
         category_totals["TOTALT"]["sold_seats"] += round(1200 * percentage)
         category_totals["TOTALT"]["section_amount"] += 1200
     print("DONE")
