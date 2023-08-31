@@ -18,6 +18,8 @@ def update_events(option):
     else:
         print("Starting update of all events... ")
         event_list = get_upcoming_events("all")
+        # event_list = [{"title": "Conference League: SK Brann - AZ Alkmaar",
+        # "time": "imorgen", "link": "https://ticketco.events/no/nb/events/328715/seating_arrangement/"}]
 
     path_to_tickets = []
     for event in event_list:
@@ -27,9 +29,11 @@ def update_events(option):
             path_to_tickets.append(get_ticket_info(event["link"], event["title"], event["time"]))
 
     finalized_strings = []
+    if len(path_to_tickets) == 0:
+        return None
+
     for path in path_to_tickets:
         finalized_strings.append(create_string(path))
-
     return finalized_strings
 
 
