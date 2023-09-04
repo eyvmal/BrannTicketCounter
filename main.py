@@ -10,7 +10,7 @@ if strings:
     images = generate_images(strings)
     tweet_header = ("Info om billettsalget for Brann sine kommende hjemmekamper!"
                     "\nEkskl. bortefelt & fjordkraft sin ståtribune."
-                    "\n(Parantesen viser endring siden forrige oppdatering)")
+                    "\n(Antall solgt, endring i antall solgt og prosent antall solgt)")
     create_tweet(tweet_header, images)
 else:
     print("No upcoming events")

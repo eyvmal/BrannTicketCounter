@@ -320,10 +320,17 @@ def create_string(file_path):
         if prior is not None:
             prior_available_seats = prior[c]["available_seats"]
             prior_sold_seats = total_capacity - prior_available_seats
-            prior_percentage_sold = (prior_sold_seats / total_capacity) * 100 if total_capacity != 0 else 0
-            diff_percentage = percentage_sold - prior_percentage_sold
+
+            # Calculating the sold seat difference
+            diff_sold_seats = sold_seats - prior_sold_seats
             return_value += f"{c.ljust(10)} {f'{sold_seats}/{total_capacity}'.ljust(12)}" \
-                            f"{f'{percentage_sold:.1f}%'.ljust(6)} ({diff_percentage:+.1f}%)\n"
+                            f"{f'{diff_sold_seats:+}'.ljust(7)} {percentage_sold:.1f}%\n"
+
+            # Calculating the percentage difference
+            # prior_percentage_sold = (prior_sold_seats / total_capacity) * 100 if total_capacity != 0 else 0
+            # diff_percentage = percentage_sold - prior_percentage_sold
+            # return_value += f"{c.ljust(10)} {f'{sold_seats}/{total_capacity}'.ljust(12)}" \
+            #                 f"{f'{percentage_sold:.1f}%'.ljust(6)} ({diff_percentage:+.1f}%)\n" """
         else:
             return_value += f"{c.ljust(10)} {f'{sold_seats}/{total_capacity}'.ljust(12)} {percentage_sold:.1f}%\n"
     time_now = get_time_formatted("human")
