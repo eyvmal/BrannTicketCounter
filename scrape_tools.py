@@ -54,7 +54,8 @@ def get_upcoming_events(next_or_all):
         a_element = event.find("a", class_="tc-events-list--title")
         event_title = a_element.get_text()
 
-        if "partoutkort" not in event_title.lower() and "gavekort" not in event_title.lower():
+        # Makes sure only matches are in the event-list
+        if "brann -" in event_title.lower():
             event_date_time = event.find("div", class_="tc-events-list--place-time").get_text(strip=True)
             event_link = get_nested_link(a_element.get("href"))
 
@@ -228,11 +229,12 @@ def save_minimal_info(json_file, event_title, event_date):
 
     for section in json_file:
         section_name = section["section_name"].lower()
-        if "fjordkraft" in section_name and "felt b" in section_name:
+        if "fjordkraft" in section_name and "felt b" in section_name or "stå" in section_name:
             continue
         category_totals["TOTALT"]["sold_seats"] += section["sold_seats"]
         category_totals["TOTALT"]["section_amount"] += section["section_amount"]
-        category_totals["TOTALT"]["available_seats"] += section["available_seats"]
+        if "press" not in section_name:
+            category_totals["TOTALT"]["available_seats"] += section["available_seats"]
 
     for section in json_file:
         section_name = section["section_name"].lower()
@@ -244,10 +246,8 @@ def save_minimal_info(json_file, event_title, event_date):
             category_totals["SPV"]["sold_seats"] += sold_seats
             category_totals["SPV"]["section_amount"] += total_capacity
             if "press" not in section_name:
-                category_totals["SPV"]["available_seats"] += available_seats
-            else:
                 # I'm cheating the numbers because press is never actually sold
-                category_totals["SPV"]["available_seats"] += 0
+                category_totals["SPV"]["available_seats"] += available_seats
         elif "bob" in section_name:
             category_totals["BT"]["sold_seats"] += sold_seats
             category_totals["BT"]["section_amount"] += total_capacity
@@ -256,7 +256,7 @@ def save_minimal_info(json_file, event_title, event_date):
             category_totals["FRYDENBØ"]["sold_seats"] += sold_seats
             category_totals["FRYDENBØ"]["section_amount"] += total_capacity
             category_totals["FRYDENBØ"]["available_seats"] += available_seats
-        elif "fjordkraft" in section_name and "felt b" not in section_name:
+        elif "fjordkraft" in section_name and "felt b" not in section_name and "stå" not in section_name:
             category_totals["FJORDKRAFT"]["sold_seats"] += sold_seats
             category_totals["FJORDKRAFT"]["section_amount"] += total_capacity
             category_totals["FJORDKRAFT"]["available_seats"] += available_seats
@@ -273,8 +273,9 @@ def save_minimal_info(json_file, event_title, event_date):
         category_totals["FRYDENBØ"]["sold_seats"] += sold_seats
         category_totals["FRYDENBØ"]["section_amount"] += 1200
         category_totals["FRYDENBØ"]["available_seats"] += 1200 - sold_seats
-        category_totals["TOTALT"]["sold_seats"] += round(1200 * percentage)
+        category_totals["TOTALT"]["sold_seats"] += sold_seats
         category_totals["TOTALT"]["section_amount"] += 1200
+        category_totals["TOTALT"]["available_seats"] += 1200 - sold_seats
     print("DONE")
     return category_totals
 
@@ -323,7 +324,11 @@ def create_string(file_path):
 
             # Calculating the sold seat difference
             diff_sold_seats = sold_seats - prior_sold_seats
-            return_value += f"{c.ljust(10)} {f'{sold_seats}/{total_capacity}'.ljust(12)}" \
+            if diff_sold_seats == 0:
+                return_value += f"{c.ljust(10)} {f'{sold_seats}/{total_capacity}'.ljust(12)}" \
+                                f"{f''.ljust(7)} {percentage_sold:.1f}%\n"
+            else:
+                return_value += f"{c.ljust(10)} {f'{sold_seats}/{total_capacity}'.ljust(12)}" \
                             f"{f'{diff_sold_seats:+}'.ljust(7)} {percentage_sold:.1f}%\n"
 
             # Calculating the percentage difference
