@@ -35,14 +35,21 @@ if you want to use your own solution,
 you'll want to edit the twitter.py file.
 
 # The Code
-The scrape_tools.py is a mess, but works
-and I have added comments throughtout the code
-to make it more readable.
+The scrape_tools.py will go to the event landing page URL stored in
+the "HOMEPAGE_URL" variable, scrape the HTML code for all upcoming
+events. Then it will go to each event URL, and scrape the HTML for
+the URL to purchase tickets. From there it will get a JSON file of all the sections.
+Knowing the event URL and the section IDs, I can send a GET-request to each
+of the available sections to get the necessary ticket information.
+When this is all done, it will save the info locally and create the Tweet.
 
-The imagify.py file is a copy of a
-[source I found on the web](https://rk.edu.pl/en/generating-memes-and-infographics-with-pillow/).
-I have modified it a bit to make it fit for my use (Colors, fonts and image).
+The imagify.py takes a text(String)-input and will
+put it onto an image and return the image path to be used later when
+the twitter.py will post the Tweet.
+The code is pretty much a copy-paste of a [source I found on the web](https://rk.edu.pl/en/generating-memes-and-infographics-with-pillow/).
+I have modified it a bit to make it fit for my use (Colors, fonts and images).
 
 twitter.py is a basic file to let me use the Twitter 2.0 API.
-Credit for the code provided goes to
-[this YouTuber](https://www.youtube.com/watch?v=r9DzYE5UD6M&t=6s).
+It will create and post Tweets having an input for the text I want
+in the Tweet title and an input for the images I want to attach to the
+Tweet. Credit for the code provided goes to [this YouTuber](https://www.youtube.com/watch?v=r9DzYE5UD6M&t=6s).
