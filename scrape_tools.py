@@ -1,10 +1,23 @@
 import datetime
 import re
 import pytz
-from bs4 import BeautifulSoup
 import requests
 import json
 import os
+from concurrent.futures import ThreadPoolExecutor
+from tqdm import tqdm
+from bs4 import BeautifulSoup
+from requests.adapters import HTTPAdapter
+from urllib3.util.retry import Retry
+
+session = requests.Session()
+retry_strategy = Retry(
+    total=3,
+    status_forcelist=[429, 500, 502, 503, 504],
+    allowed_methods=["HEAD", "GET", "OPTIONS"]
+)
+adapter = HTTPAdapter(max_retries=retry_strategy)
+session.mount("https://", adapter)
 
 HOMEPAGE_URL = "https://brann.ticketco.events/no/nb"
 SAVE_PATH = os.path.dirname(os.path.abspath(__file__)) + "/"
@@ -12,6 +25,10 @@ SAVE_PATH = os.path.dirname(os.path.abspath(__file__)) + "/"
 
 # The main method for updating and fetching new ticket info
 def update_events(option):
+    valid_options = ["all", "next", "none", "debug"]
+    if option.lower() not in valid_options:
+        raise ValueError(f"Invalid option: {option}. Valid options are: {', '.join(valid_options)}")
+
     if option.lower() == "next" or option.lower() == "debug":
         print("Starting update of the next event... ")
         event_list = get_upcoming_events("next")
@@ -21,6 +38,7 @@ def update_events(option):
 
     path_to_tickets = []
     for event in event_list:
+        print("")
         if "none" in option.lower():
             path_to_tickets.append(get_directory_path(str(event["title"])))
         elif "debug" in option.lower():
@@ -29,6 +47,7 @@ def update_events(option):
             return None
         else:
             path_to_tickets.append(get_ticket_info(event["link"], event["title"], event["time"], False))
+    print("")
     finalized_strings = []
     if len(path_to_tickets) == 0:
         return None
@@ -48,7 +67,11 @@ def get_upcoming_events(next_or_all):
     # Find the URLs for the event pages
     print("Getting events... ", end="")
     event_list = []
-    event_containers = soup.find_all("div", class_="tc-events-list--details")
+    try:
+        event_containers = soup.find_all("div", class_="tc-events-list--details")
+    except AttributeError:
+        print("Failed to find events: The website structure may have changed.")
+        return []
 
     for event in event_containers:
         a_element = event.find("a", class_="tc-events-list--title")
@@ -80,7 +103,7 @@ def get_nested_link(url):
 
 def fetch_url(url):
     try:
-        response = requests.get(url)
+        response = session.get(url)
         response.raise_for_status()
         return response
     except requests.exceptions.RequestException as e:
@@ -100,32 +123,36 @@ def get_ticket_info(event_url, event_title, event_date, debug):
     # Get all stadium sections where tickets are sold
     sections = [section["id"] for section in json_data["item_types"][0]["sections"]]
 
-    # Used for the console progress bar
-    percentage = round((100 / len(sections)), 2)
-    iteration = 1
+    # Create a tqdm progress bar
+    pbar = tqdm(total=len(sections), desc="Counting sections", unit="section")
 
-    results = []
-    print("Counting tickets: ")
-    for section in sections:
-        results.append(get_section_tickets(section, event_url))
+    # Create a thread pool and fetch section data concurrently
+    with ThreadPoolExecutor() as executor:
+        futures = [executor.submit(get_section_tickets, section, event_url, pbar) for section in sections]
 
-        # Progress bar
-        loading = "." * iteration + " [" + str(round(percentage * iteration, 1)) + "]"
-        print("\r" + loading + "%", end="", flush=True)
-        iteration += 1
-    print("")
+    # Gather results and close the progress bar
+    results = [future.result() for future in futures]
+    pbar.close()
+
+    # results = []
+    # for section in tqdm(sections, desc="Counting sections", unit="section"):
+    #     results.append(get_section_tickets(section, event_url))
+
     # Saving only the necessary info to operate the bot to minimize amount storage
-    # If you want all info, save the "results" file instead of mini_results
     mini_results = save_minimal_info(results, event_title, event_date)
     if debug:
         return save_new_json("debug", results)
     return save_new_json(event_title, mini_results)
 
 
-def get_section_tickets(section, event_url):
+def get_section_tickets(section, event_url, pbar):
     # Get json for this section
     json_url = event_url + "sections/" + str(section) + ".json"
-    json_data = fetch_url(json_url).json()
+    try:
+        json_data = fetch_url(json_url).json()
+    except (json.JSONDecodeError, AttributeError):
+        print(f"Failed to decode JSON from URL: {json_url}")
+        return None
 
     # Saves name, id and number of available seats remaining
     section_name = json_data["seating_arrangements"]["section_name"]
@@ -156,6 +183,7 @@ def get_section_tickets(section, event_url):
         available_seats -= phantom_seats
         section_total -= phantom_seats
 
+    pbar.update(1)
     return {
         "section_name": section_name,
         "section_id": section_id,
@@ -207,7 +235,6 @@ def get_time_formatted(computer_or_human):
 
 
 def save_minimal_info(json_file, event_title, event_date):
-    print("Formatting ticket info to minimal info... ", end="", flush=True)
     # Check if the event name contains a word that suggests that the game is played in europe
     # to filter out the prohibited sections from the calculations
     event_title_lower = event_title.lower()
@@ -276,7 +303,6 @@ def save_minimal_info(json_file, event_title, event_date):
         category_totals["TOTALT"]["sold_seats"] += sold_seats
         category_totals["TOTALT"]["section_amount"] += 1200
         category_totals["TOTALT"]["available_seats"] += 1200 - sold_seats
-    print("DONE")
     return category_totals
 
 
