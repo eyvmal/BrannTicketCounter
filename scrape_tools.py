@@ -10,7 +10,11 @@ from bs4 import BeautifulSoup
 from requests.adapters import HTTPAdapter
 from urllib3.util.retry import Retry
 
+HOMEPAGE_URL = "https://brann.ticketco.events/no/nb"
+SAVE_PATH = os.path.dirname(os.path.abspath(__file__)) + "/"
+
 session = requests.Session()
+# Prevents requests from looping forever
 retry_strategy = Retry(
     total=3,
     status_forcelist=[429, 500, 502, 503, 504],
@@ -19,12 +23,17 @@ retry_strategy = Retry(
 adapter = HTTPAdapter(max_retries=retry_strategy)
 session.mount("https://", adapter)
 
-HOMEPAGE_URL = "https://brann.ticketco.events/no/nb"
-SAVE_PATH = os.path.dirname(os.path.abspath(__file__)) + "/"
 
-
-# The main method for updating and fetching new ticket info
 def update_events(option):
+    """
+        The initiating method for the script.
+    :param option:
+        This will either update 'all' event, the 'next' event,
+        'none' of the events (just print what information is already saved locally),
+        or save a 'debug' (all seat information about all events)
+    :return:
+       String output containing ticket information about the event(s).
+    """
     valid_options = ["all", "next", "none", "debug"]
     if option.lower() not in valid_options:
         raise ValueError(f"Invalid option: {option}. Valid options are: {', '.join(valid_options)}")
@@ -36,35 +45,38 @@ def update_events(option):
         print("Starting update of all events... ")
         event_list = get_upcoming_events("all")
 
-    path_to_tickets = []
+    dir_path_to_tickets = []
     for event in event_list:
         print("")
         if "none" in option.lower():
-            path_to_tickets.append(get_directory_path(str(event["title"])))
+            dir_path_to_tickets.append(get_directory_path(str(event["title"])))
         elif "debug" in option.lower():
-            path_to_tickets.append(get_ticket_info(event["link"], event["title"], event["time"], True))
+            dir_path_to_tickets.append(get_ticket_info(event["link"], event["title"], event["time"], True))
             print("Debug done.")
             return None
         else:
-            path_to_tickets.append(get_ticket_info(event["link"], event["title"], event["time"], False))
+            dir_path_to_tickets.append(get_ticket_info(event["link"], event["title"], event["time"], False))
     print("")
     finalized_strings = []
-    if len(path_to_tickets) == 0:
+    if len(dir_path_to_tickets) == 0:
         return None
 
-    for path in path_to_tickets:
+    for path in dir_path_to_tickets:
         finalized_strings.append(create_string(path))
     return finalized_strings
 
 
-# Connect to the Brann event page and get all the links for upcoming events.
-# Then go through the event links and look for the actual ticket page link.
-# Return event name, event date/time and ticket link for every event
 def get_upcoming_events(next_or_all):
+    """
+    Connects to the Brann main event page to collect the URLs for all upcoming events.
+    :param next_or_all:
+        Decides if this method will return all upcoming events or just the next
+    :return:
+        A list of the next or all upcoming events
+    """
     print("Connecting to " + HOMEPAGE_URL)
     soup = BeautifulSoup(fetch_url(HOMEPAGE_URL).text, "html.parser")
 
-    # Find the URLs for the event pages
     print("Getting events... ", end="")
     event_list = []
     try:
@@ -77,31 +89,48 @@ def get_upcoming_events(next_or_all):
         a_element = event.find("a", class_="tc-events-list--title")
         event_title = a_element.get_text()
 
-        # Makes sure only matches are in the event-list
+        # Only process the actual matches (Strips the array for gift cards, package deals etc.)
         if "brann -" in event_title.lower():
-            event_date_time = event.find("div", class_="tc-events-list--place-time").get_text(strip=True)
-            event_link = get_nested_link(a_element.get("href"))
+            try:
+                event_date_time = event.find("div", class_="tc-events-list--place-time").get_text(strip=True)
+                event_link = get_nested_link(a_element.get("href"))
+                event_list.append({
+                    "title": event_title,
+                    "time": event_date_time,
+                    "link": event_link
+                })
+            except AttributeError:
+                print("Failed to find links in event: The website structure may have changed.")
 
-            event_list.append({
-                "title": event_title,
-                "time": event_date_time,
-                "link": event_link
-            })
     if next_or_all.lower() == "next":
         event_list = [event_list[0]]
-    print("DONE")
+    print(f"DONE")
     return event_list
 
 
-# Brann have makes you click 2 links from the event overview page to come to the ticket page
-# This code finds the 2nd link if you have the first one already
 def get_nested_link(url):
+    """
+    The Brann event provide a URL to all upcoming events.
+    But to get the actual ticket information you have to get another URL.
+    This method will find the URL to the ticket webpage on an event page.
+    :param url:
+        URL to an event page
+    :return:
+        returns the ticket page URL
+    """
     soup = BeautifulSoup(fetch_url(url).text, "html.parser")
     event_url = soup.find("a", id="placeOrderLink")
     return event_url.get("href")
 
 
 def fetch_url(url):
+    """
+    Gets the HTML code for a webpage
+    :param url:
+        URL to the webpage you want to scrape
+    :return:
+        HTML code for the webpage
+    """
     try:
         response = session.get(url)
         response.raise_for_status()
@@ -112,41 +141,57 @@ def fetch_url(url):
 
 
 def get_ticket_info(event_url, event_title, event_date, debug):
-    # Scrape the .json file from the event page
+    """
+    Find all the section IDs for the event and calls a function to sort the seat information.
+    Then strips the information to the bare minimum necessary, saves it, and returns the file path.
+    :param event_url:
+        The URL for the event you want the ticket information on
+    :param event_title:
+        Title of the event
+    :param event_date:
+        Date of the event
+    :param debug:
+        A boolean value to check if you want to save a debug version of the results or not
+    :return:
+        Directory path to where the results are saved
+    """
     json_url = event_url + "item_types.json"
     event_title = str(event_title).replace('\n', "")
     event_date = (str(event_date).replace('\n', "")
                   .replace('@', " @ "))
-    print("Updating ticket information for: " + event_title)  # Debug
+    print("Updating ticket information for: " + event_title)
     json_data = fetch_url(json_url).json()
 
-    # Get all stadium sections where tickets are sold
     sections = [section["id"] for section in json_data["item_types"][0]["sections"]]
+    progress_bar = tqdm(total=len(sections), desc="Counting sections", unit="section")
 
-    # Create a tqdm progress bar
-    pbar = tqdm(total=len(sections), desc="Counting sections", unit="section")
-
-    # Create a thread pool and fetch section data concurrently
     with ThreadPoolExecutor() as executor:
-        futures = [executor.submit(get_section_tickets, section, event_url, pbar) for section in sections]
+        ticket_info = [executor.submit(get_section_tickets, section, event_url, progress_bar) for section in sections]
+    results = [info.result() for info in ticket_info]
 
-    # Gather results and close the progress bar
-    results = [future.result() for future in futures]
-    pbar.close()
+    progress_bar.close()
 
-    # results = []
-    # for section in tqdm(sections, desc="Counting sections", unit="section"):
-    #     results.append(get_section_tickets(section, event_url))
-
-    # Saving only the necessary info to operate the bot to minimize amount storage
     mini_results = save_minimal_info(results, event_title, event_date)
     if debug:
         return save_new_json("debug", results)
     return save_new_json(event_title, mini_results)
 
 
-def get_section_tickets(section, event_url, pbar):
-    # Get json for this section
+def get_section_tickets(section, event_url, progressbar):
+    """
+    Using section ID and event URL, this method will fetch a json containing all seat
+    information for this section. It will then group it together for readability and return it.
+    Standing sections contain no seat information, and needs special treatment.
+    Sometimes seats have a weird coordinate (e.g <0) and is considered a phantom seat as it cannot be bought.
+    :param section:
+        Arena section ID where it will fetch ticket information
+    :param event_url:
+        URL to the event
+    :param progressbar:
+        Progress element, to update the progressbar
+    :return:
+        Dictionary containing grouped stats of all seats in this section
+    """
     json_url = event_url + "sections/" + str(section) + ".json"
     try:
         json_data = fetch_url(json_url).json()
@@ -154,36 +199,25 @@ def get_section_tickets(section, event_url, pbar):
         print(f"Failed to decode JSON from URL: {json_url}")
         return None
 
-    # Saves name, id and number of available seats remaining
     section_name = json_data["seating_arrangements"]["section_name"]
     section_total = json_data["seating_arrangements"]["section_amount"]
     section_id = section
-    if "stå" in str(section_name).lower():  # Special treatment for standing sections
+    if "stå" in str(section_name).lower():
         sold_seats = 0
         available_seats = 0
         locked_seats = 0
         phantom_seats = 0
         available_seats_object = None
     else:
-        # Seat objects
         seats = [seat for seat in json_data["seating_arrangements"]["seats"]]
-
-        # Extract seats with status "sold"
         sold_seats = len([seat for seat in seats if seat["status"] == "sold"])
-
-        # Extract seats with status "available"
         available_seats_object = [seat for seat in seats if seat["status"] == "available"]
         available_seats = len(available_seats_object)
-
-        # For statistics :)
         locked_seats = len([seat for seat in seats if seat["status"] == "locked"])
-
-        # Count phantom seats and deduct them from section
         phantom_seats = len([seat for seat in seats if float(seat["x"]) <= 0 and seat["status"] == "available"])
         available_seats -= phantom_seats
         section_total -= phantom_seats
-
-    pbar.update(1)
+    progressbar.update(1)
     return {
         "section_name": section_name,
         "section_id": section_id,
@@ -196,23 +230,36 @@ def get_section_tickets(section, event_url, pbar):
     }
 
 
-def save_new_json(event_title, file):
-    # Get directory to save results
+def save_new_json(event_title, data):
+    """
+    Saves data to JSON file
+    :param event_title:
+        Title of the event, used as directory name
+    :param data:
+        The data that is going to be saved to JSON
+    :return:
+        Returns the directory path
+    """
     dir_path = get_directory_path(event_title)
     time_now = get_time_formatted("computer")
     filename = f"results_{time_now}.json"
 
-    # Save results to a JSON file with the formatted datetime in the specified directory
     file_path = os.path.join(dir_path, filename)
     with open(file_path, "w") as json_file:
-        json.dump(file, json_file)
+        json.dump(data, json_file)
         print(f"File saved at {file_path}")
     return dir_path
 
 
-# Checks if directory exists, if not it will create a new
 def get_directory_path(event_name):
-    # Remove characters that are not allowed in directory names and remove spaces
+    """
+    Strips the even_name for illegal characters and checks an if there already is
+    a directory for a specific event. If not, a new one will be created.
+    :param event_name:
+        Name of the event
+    :return:
+        Returns path to the directory
+    """
     valid_dir_name = (re.sub(r'[<>:"/\\|?*]', '', event_name)
                       .replace(' ', '')
                       .replace('\n', ''))
@@ -222,25 +269,47 @@ def get_directory_path(event_name):
     return dir_path
 
 
-# Formats time for human eyes or sorting files on the computer
 def get_time_formatted(computer_or_human):
-    # Get the local time zone for Norway
+    """
+    Formats time to either easily sort files chronologically (computer)
+    or to easily be read by humans using local norwegian timezone and formatting.
+    :param computer_or_human:
+        Input telling what type of format you want.
+    :return:
+        Returns a string value of the time in the selected formatting.
+    """
     norway_timezone = pytz.timezone("Europe/Oslo")
     current_datetime = datetime.datetime.now(norway_timezone)
 
-    if computer_or_human.lower() == "computer":  # Used to save files locally
+    if computer_or_human.lower() == "computer":
         return str(current_datetime.strftime("%Y-%m-%d_%H-%M-%S"))
-    else:  # Else for human readability
+    else:
         return str(current_datetime.strftime("%H:%M %d/%m/%Y"))
 
 
-def save_minimal_info(json_file, event_title, event_date):
-    # Check if the event name contains a word that suggests that the game is played in europe
-    # to filter out the prohibited sections from the calculations
+def save_minimal_info(data, event_title, event_date):
+    """
+    Takes information about all the sections for an event and groups them together to their respective
+    stands around the arena: "Frydenbø", "Sparebanken Vest", "BT", "Fjordkraft", "VIP". And add an extra
+    section for the whole arena: "Total".
+    - If the game is a european game, all standing sections are closed due to UEFA rules.
+    - Some sections are locked and not available to the public (No seats available and no seats sold).
+    - The section for media ("press") is never actually sold.
+    - An estimate is added for the famous Frydenbø standing section ("Store Stå").
+      Its calculated based on percentage sold of "Frydenbø".
+    :param data:
+        An array containing data for all the arena sections
+    :param event_title:
+        The title of the event
+    :param event_date:
+        The date of the event
+    :return:
+        Return a dictionary of all the sections and info about their seats
+    """
     event_title_lower = event_title.lower()
     europa = False
     if "conference" in event_title_lower or "europa" in event_title_lower or "champions" in event_title_lower:
-        europa = True  # Used in an if statement later on
+        europa = True
 
     category_totals = {
         "GENERAL:": {"title": event_title, "date": event_date},
@@ -251,8 +320,7 @@ def save_minimal_info(json_file, event_title, event_date):
         "VIP": {"sold_seats": 0, "section_amount": 0, "available_seats": 0},
         "TOTALT": {"sold_seats": 0, "section_amount": 0, "available_seats": 0}
     }
-    # Remove all sections where no seats are available AND no are sold (All standing sections + away section).
-    json_file = [section for section in json_file if section["sold_seats"] != 0 or section["available_seats"] != 0]
+    json_file = [section for section in data if section["sold_seats"] != 0 or section["available_seats"] != 0]
 
     for section in json_file:
         section_name = section["section_name"].lower()
@@ -273,7 +341,6 @@ def save_minimal_info(json_file, event_title, event_date):
             category_totals["SPV"]["sold_seats"] += sold_seats
             category_totals["SPV"]["section_amount"] += total_capacity
             if "press" not in section_name:
-                # I'm cheating the numbers because press is never actually sold
                 category_totals["SPV"]["available_seats"] += available_seats
         elif "bob" in section_name:
             category_totals["BT"]["sold_seats"] += sold_seats
@@ -292,10 +359,8 @@ def save_minimal_info(json_file, event_title, event_date):
             category_totals["VIP"]["section_amount"] += total_capacity
             category_totals["VIP"]["available_seats"] += available_seats
 
-    # Add an estimate for Store Stå to the Frydenbø section
     if europa is False:
-        percentage = round((category_totals["FRYDENBØ"]["sold_seats"] / category_totals["FRYDENBØ"]["section_amount"]),
-                           2)
+        percentage = round((category_totals["FRYDENBØ"]["sold_seats"] / category_totals["FRYDENBØ"]["section_amount"]), 2)
         sold_seats = round(1200 * percentage)
         category_totals["FRYDENBØ"]["sold_seats"] += sold_seats
         category_totals["FRYDENBØ"]["section_amount"] += 1200
@@ -306,8 +371,14 @@ def save_minimal_info(json_file, event_title, event_date):
     return category_totals
 
 
-# Returns the two most recently edited files.
 def get_latest_file(dir_path):
+    """
+    Fetches the two most recently edited files (Should be the 2 most recent) in a directory.
+    :param dir_path:
+        Path to the directory
+    :return:
+        Returns the data for the respective files
+    """
     files = os.listdir(dir_path)
     sorted_files = sorted(files, key=lambda x: os.path.getmtime(os.path.join(dir_path, x)), reverse=True)
     if len(sorted_files) > 1:
@@ -324,46 +395,45 @@ def get_latest_file(dir_path):
             return json.load(json_file), None
 
 
-def create_string(file_path):
-    latest, prior = get_latest_file(file_path)
+def create_string(dir_path):
+    """
+    Converts the data to a String, ready to be put in a Tweet.
+    Also compares the two latest results to calculates the difference in tickets sold.
+    :param dir_path:
+        path to the event directory
+    :return:
+        Returns a string value of the ticket information
+    """
+    latest, prior = get_latest_file(dir_path)
     return_value = ""
 
-    # c is category and d is data. Result is a dictionary containing c and d
-    for c, d in latest.items():
-        if "GENERAL" in c:
-            return_value = d["title"] + "\n" + d["date"] + "\n\n"
+    for category, data in latest.items():
+        if "GENERAL" in category:
+            return_value = data["title"] + "\n" + data["date"] + "\n\n"
             continue
 
-        # sold_seats = d['sold_seats']
-        available_seats = d["available_seats"]
-        total_capacity = d["section_amount"]
+        available_seats = data["available_seats"]
+        total_capacity = data["section_amount"]
         sold_seats = total_capacity - available_seats
         percentage_sold = (sold_seats / total_capacity) * 100 if total_capacity != 0 else 0
 
-        # Newline before the total to separate it from the rest of the results
-        if c.lower() == "totalt":
+        if category.lower() == "totalt":  # Adds newline before the totals
             return_value += "\n"
 
         if prior is not None:
-            prior_available_seats = prior[c]["available_seats"]
+            prior_available_seats = prior[category]["available_seats"]
             prior_sold_seats = total_capacity - prior_available_seats
 
-            # Calculating the sold seat difference
             diff_sold_seats = sold_seats - prior_sold_seats
             if diff_sold_seats == 0:
-                return_value += f"{c.ljust(10)} {f'{sold_seats}/{total_capacity}'.ljust(12)}" \
+                return_value += f"{category.ljust(10)} {f'{sold_seats}/{total_capacity}'.ljust(12)}" \
                                 f"{f''.ljust(7)} {percentage_sold:.1f}%\n"
             else:
-                return_value += f"{c.ljust(10)} {f'{sold_seats}/{total_capacity}'.ljust(12)}" \
+                return_value += f"{category.ljust(10)} {f'{sold_seats}/{total_capacity}'.ljust(12)}" \
                             f"{f'{diff_sold_seats:+}'.ljust(7)} {percentage_sold:.1f}%\n"
 
-            # Calculating the percentage difference
-            # prior_percentage_sold = (prior_sold_seats / total_capacity) * 100 if total_capacity != 0 else 0
-            # diff_percentage = percentage_sold - prior_percentage_sold
-            # return_value += f"{c.ljust(10)} {f'{sold_seats}/{total_capacity}'.ljust(12)}" \
-            #                 f"{f'{percentage_sold:.1f}%'.ljust(6)} ({diff_percentage:+.1f}%)\n" """
         else:
-            return_value += f"{c.ljust(10)} {f'{sold_seats}/{total_capacity}'.ljust(12)} {percentage_sold:.1f}%\n"
+            return_value += f"{category.ljust(10)} {f'{sold_seats}/{total_capacity}'.ljust(12)} {percentage_sold:.1f}%\n"
     time_now = get_time_formatted("human")
     return_value += f"\n\nOppdatert: {time_now}\n "
     return return_value
