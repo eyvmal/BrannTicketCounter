@@ -9,6 +9,8 @@ from tqdm import tqdm
 from bs4 import BeautifulSoup
 from requests.adapters import HTTPAdapter
 from urllib3.util.retry import Retry
+from typing import List, Dict, Union, Tuple, Optional
+
 
 HOMEPAGE_URL = "https://brann.ticketco.events/no/nb"
 SAVE_PATH = os.path.dirname(os.path.abspath(__file__)) + "/"
@@ -24,15 +26,24 @@ adapter = HTTPAdapter(max_retries=retry_strategy)
 session.mount("https://", adapter)
 
 
-def update_events(option):
-    """
-        The initiating method for the script.
-    :param option:
-        This will either update 'all' event, the 'next' event,
-        'none' of the events (just print what information is already saved locally),
-        or save a 'debug' (all seat information about all events)
-    :return:
-       String output containing ticket information about the event(s).
+def update_events(option: str) -> Optional[List[str]]:
+    """Initiates the process to update events based on the specified option.
+
+    This function serves as the starting point for the script, initiating the process
+    to scrape and update event data based on the option specified. It controls the
+    behavior of the script and determines which events will be targeted for data
+    retrieval and updating.
+    Args:
+        option (str):
+            Specifies the events to target for updating. Valid values are:
+            - 'all': Update data for all events.
+            - 'next': Update data for the next event only.
+            - 'none': Do not update any event data; only print existing data.
+            - 'debug': Save detailed seat information for all events.
+    Returns:
+        Optional[List[str]]:
+            A list of strings, each containing ticket information about the targeted event(s),
+            formatted and ready for output. In 'debug' mode, no list is returned.
     """
     valid_options = ["all", "next", "none", "debug"]
     if option.lower() not in valid_options:
@@ -66,13 +77,15 @@ def update_events(option):
     return finalized_strings
 
 
-def get_upcoming_events(next_or_all):
-    """
-    Connects to the Brann main event page to collect the URLs for all upcoming events.
-    :param next_or_all:
-        Decides if this method will return all upcoming events or just the next
-    :return:
-        A list of the next or all upcoming events
+def get_upcoming_events(next_or_all: str) -> List[Dict]:
+    """Fetch URLs of all upcoming events from the Brann main event page.
+    Args:
+        next_or_all (str):
+            Determines whether to return all upcoming events or just the next one.
+            Accepts values: 'next', 'all'.
+    Returns:
+        List[Dict]:
+            A list of dictionaries containing details of the next or all upcoming events.
     """
     print("Connecting to " + HOMEPAGE_URL)
     soup = BeautifulSoup(fetch_url(HOMEPAGE_URL).text, "html.parser")
@@ -108,28 +121,28 @@ def get_upcoming_events(next_or_all):
     return event_list
 
 
-def get_nested_link(url):
-    """
-    The Brann event provide a URL to all upcoming events.
-    But to get the actual ticket information you have to get another URL.
-    This method will find the URL to the ticket webpage on an event page.
-    :param url:
-        URL to an event page
-    :return:
-        returns the ticket page URL
+def get_nested_link(url: str) -> str:
+    """Find and return the ticket page URL from an event page.
+    Args:
+        url (str):
+            The URL of the event page.
+    Returns:
+        str:
+            The URL of the ticket page.
     """
     soup = BeautifulSoup(fetch_url(url).text, "html.parser")
     event_url = soup.find("a", id="placeOrderLink")
     return event_url.get("href")
 
 
-def fetch_url(url):
-    """
-    Gets the HTML code for a webpage
-    :param url:
-        URL to the webpage you want to scrape
-    :return:
-        HTML code for the webpage
+def fetch_url(url: str) -> Optional[requests.Response]:
+    """Fetch the HTML code for a webpage.
+    Args:
+        url (str):
+            The URL of the webpage to scrape.
+    Returns:
+        Optional[requests.Response]:
+            The HTML code of the webpage, or None if an error occurs.
     """
     try:
         response = session.get(url)
@@ -140,20 +153,20 @@ def fetch_url(url):
         return None
 
 
-def get_ticket_info(event_url, event_title, event_date, debug):
-    """
-    Find all the section IDs for the event and calls a function to sort the seat information.
-    Then strips the information to the bare minimum necessary, saves it, and returns the file path.
-    :param event_url:
-        The URL for the event you want the ticket information on
-    :param event_title:
-        Title of the event
-    :param event_date:
-        Date of the event
-    :param debug:
-        A boolean value to check if you want to save a debug version of the results or not
-    :return:
-        Directory path to where the results are saved
+def get_ticket_info(event_url: str, event_title: str, event_date: str, debug: bool) -> str:
+    """Gather and save ticket information for a given event.
+    Args:
+        event_url (str):
+            The URL to find ticket information for the event.
+        event_title (str):
+            The title of the event.
+        event_date (str):
+            The date of the event.
+        debug (bool):
+            Whether to save a debug version of the results.
+    Returns:
+        str:
+            The directory path where the results are saved.
     """
     json_url = event_url + "item_types.json"
     event_title = str(event_title).replace('\n', "")
@@ -177,20 +190,18 @@ def get_ticket_info(event_url, event_title, event_date, debug):
     return save_new_json(event_title, mini_results)
 
 
-def get_section_tickets(section, event_url, progressbar):
-    """
-    Using section ID and event URL, this method will fetch a json containing all seat
-    information for this section. It will then group it together for readability and return it.
-    Standing sections contain no seat information, and needs special treatment.
-    Sometimes seats have a weird coordinate (e.g <0) and is considered a phantom seat as it cannot be bought.
-    :param section:
-        Arena section ID where it will fetch ticket information
-    :param event_url:
-        URL to the event
-    :param progressbar:
-        Progress element, to update the progressbar
-    :return:
-        Dictionary containing grouped stats of all seats in this section
+def get_section_tickets(section: int, event_url: str, progressbar) -> Optional[Dict]:
+    """Fetch and organize seat information for a specific section of the arena.
+    Args:
+        section (int):
+            The ID of the arena section to fetch ticket information for.
+        event_url (str):
+            The URL of the event.
+        progressbar:
+            The progress bar object to update during execution.
+    Returns:
+        Optional[Dict]:
+            A dictionary containing organized stats and details of all seats in the section.
     """
     json_url = event_url + "sections/" + str(section) + ".json"
     try:
@@ -230,15 +241,16 @@ def get_section_tickets(section, event_url, progressbar):
     }
 
 
-def save_new_json(event_title, data):
-    """
-    Saves data to JSON file
-    :param event_title:
-        Title of the event, used as directory name
-    :param data:
-        The data that is going to be saved to JSON
-    :return:
-        Returns the directory path
+def save_new_json(event_title: str, data: Union[Dict, List[Dict]]) -> str:
+    """Save data to a JSON file.
+    Args:
+        event_title (str):
+            The title of the event, used as the directory name.
+        data (List[Dict[str, Union[str, int]]]):
+            The data to save to the JSON file.
+    Returns:
+        str:
+            The directory path where the file is saved.
     """
     dir_path = get_directory_path(event_title)
     time_now = get_time_formatted("computer")
@@ -251,14 +263,17 @@ def save_new_json(event_title, data):
     return dir_path
 
 
-def get_directory_path(event_name):
-    """
-    Strips the even_name for illegal characters and checks an if there already is
-    a directory for a specific event. If not, a new one will be created.
-    :param event_name:
-        Name of the event
-    :return:
-        Returns path to the directory
+def get_directory_path(event_name: str) -> str:
+    """Creates or retrieves the directory path for a specific event.
+
+    This function cleans the event name of illegal characters and checks if a directory
+    for the specific event already exists. If it doesn't, a new directory is created.
+    Args:
+        event_name (str):
+            The name of the event.
+    Returns:
+        str:
+            The path to the directory corresponding to the event name.
     """
     valid_dir_name = (re.sub(r'[<>:"/\\|?*]', '', event_name)
                       .replace(' ', '')
@@ -269,14 +284,18 @@ def get_directory_path(event_name):
     return dir_path
 
 
-def get_time_formatted(computer_or_human):
-    """
-    Formats time to either easily sort files chronologically (computer)
-    or to easily be read by humans using local norwegian timezone and formatting.
-    :param computer_or_human:
-        Input telling what type of format you want.
-    :return:
-        Returns a string value of the time in the selected formatting.
+def get_time_formatted(computer_or_human: str) -> str:
+    """Formats the current time in a specified format.
+
+    This function returns the current time formatted either for easy chronological file sorting
+    ('computer' option) or in a human-readable format with Norwegian timezone and formatting
+    ('human' option).
+    Args:
+        computer_or_human (str):
+            The format specification, accepts 'computer' or 'human'.
+    Returns:
+        str:
+            The formatted current time as a string.
     """
     norway_timezone = pytz.timezone("Europe/Oslo")
     current_datetime = datetime.datetime.now(norway_timezone)
@@ -287,24 +306,22 @@ def get_time_formatted(computer_or_human):
         return str(current_datetime.strftime("%H:%M %d/%m/%Y"))
 
 
-def save_minimal_info(data, event_title, event_date):
-    """
-    Takes information about all the sections for an event and groups them together to their respective
-    stands around the arena: "Frydenbø", "Sparebanken Vest", "BT", "Fjordkraft", "VIP". And add an extra
-    section for the whole arena: "Total".
-    - If the game is a european game, all standing sections are closed due to UEFA rules.
-    - Some sections are locked and not available to the public (No seats available and no seats sold).
-    - The section for media ("press") is never actually sold.
-    - An estimate is added for the famous Frydenbø standing section ("Store Stå").
-      Its calculated based on percentage sold of "Frydenbø".
-    :param data:
-        An array containing data for all the arena sections
-    :param event_title:
-        The title of the event
-    :param event_date:
-        The date of the event
-    :return:
-        Return a dictionary of all the sections and info about their seats
+def save_minimal_info(data: List[Dict], event_title: str, event_date: str) -> Dict:
+    """Aggregates section data for an event.
+
+    The function groups section data by stands around the arena, and adds a 'Total' section that
+    summarizes all sections. Special rules apply for European games and certain sections like the
+    press section and the Frydenbø standing section.
+    Args:
+        data (List[Dict[str, Union[str, int, float]]]):
+            List of dictionaries containing section data for the event.
+        event_title (str):
+            The title of the event.
+        event_date (str):
+            The date of the event.
+    Returns:
+        Dict:
+            A dictionary containing aggregated data for each category and the total.
     """
     event_title_lower = event_title.lower()
     europa = False
@@ -360,7 +377,8 @@ def save_minimal_info(data, event_title, event_date):
             category_totals["VIP"]["available_seats"] += available_seats
 
     if europa is False:
-        percentage = round((category_totals["FRYDENBØ"]["sold_seats"] / category_totals["FRYDENBØ"]["section_amount"]), 2)
+        percentage = round((category_totals["FRYDENBØ"]["sold_seats"] /
+                            category_totals["FRYDENBØ"]["section_amount"]), 2)
         sold_seats = round(1200 * percentage)
         category_totals["FRYDENBØ"]["sold_seats"] += sold_seats
         category_totals["FRYDENBØ"]["section_amount"] += 1200
@@ -371,13 +389,17 @@ def save_minimal_info(data, event_title, event_date):
     return category_totals
 
 
-def get_latest_file(dir_path):
-    """
-    Fetches the two most recently edited files (Should be the 2 most recent) in a directory.
-    :param dir_path:
-        Path to the directory
-    :return:
-        Returns the data for the respective files
+def get_latest_file(dir_path: str) -> Tuple[Dict, Optional[Dict]]:
+    """Fetches the two most recent files in a directory.
+
+    The function returns the data of the two most recently edited files in a directory.
+    If there is only one file, the second element in the tuple will be None.
+    Args:
+        dir_path (str):
+            The path to the directory.
+    Returns:
+        Tuple[Dict, Optional[Dict]]:
+            The most recent and the second most recent file data, if available.
     """
     files = os.listdir(dir_path)
     sorted_files = sorted(files, key=lambda x: os.path.getmtime(os.path.join(dir_path, x)), reverse=True)
@@ -395,14 +417,17 @@ def get_latest_file(dir_path):
             return json.load(json_file), None
 
 
-def create_string(dir_path):
-    """
-    Converts the data to a String, ready to be put in a Tweet.
-    Also compares the two latest results to calculates the difference in tickets sold.
-    :param dir_path:
-        path to the event directory
-    :return:
-        Returns a string value of the ticket information
+def create_string(dir_path: str) -> str:
+    """Creates a formatted string with ticket information for a tweet.
+
+    The function generates a string with ticket information, including differences in ticket sales
+    compared to the previous data point, ready to be posted as a tweet.
+    Args:
+        dir_path (str):
+            The path to the event directory.
+    Returns:
+        str:
+            A string containing the formatted ticket information.
     """
     latest, prior = get_latest_file(dir_path)
     return_value = ""
@@ -433,7 +458,8 @@ def create_string(dir_path):
                             f"{f'{diff_sold_seats:+}'.ljust(7)} {percentage_sold:.1f}%\n"
 
         else:
-            return_value += f"{category.ljust(10)} {f'{sold_seats}/{total_capacity}'.ljust(12)} {percentage_sold:.1f}%\n"
+            return_value += (f"{category.ljust(10)} {f'{sold_seats}/{total_capacity}'.ljust(12)} "
+                             f"{percentage_sold:.1f}%\n")
     time_now = get_time_formatted("human")
     return_value += f"\n\nOppdatert: {time_now}\n "
     return return_value
