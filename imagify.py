@@ -124,6 +124,8 @@ def get_image(line):
         return SAVE_PATH + "imagify/viking.png", f"Brann - Viking"
     elif "alkmaar" in line_lower:
         return SAVE_PATH + "imagify/alkmaar.png", "Brann - AZ Alkmaar"
+    elif "brann - glasgow" in line_lower:
+        return SAVE_PATH + "imagify/brann_logo.png", "UEFA CL Runde 2: Brann - Glasgow City"
     else:
         return SAVE_PATH + "imagify/brann_logo.png", line
 
