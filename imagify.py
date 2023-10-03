@@ -1,3 +1,5 @@
+from typing import Tuple, List
+
 import PIL.Image
 import os
 import textwrap
@@ -112,7 +114,19 @@ IMAGE_MAP = {
 }
 
 
-def get_image(line):
+def get_image(line: str) -> Tuple[str, str]:
+    """
+    Retrieves the associated image path and title based on keywords found in the provided line.
+    This function searches for keywords within the provided line. Based on these keywords,
+    it returns the corresponding image path and title. If no keyword is matched, a default
+    image and title (the line itself) is returned.
+    Args:
+        line (str): The line of text containing the match title from ticketco.
+    Returns:
+        Tuple[str, str]:
+            - The full path to the associated or default image.
+            - The title or header associated with the matched keyword or the truncated line itself.
+    """
     line_lower = line.lower()
 
     for keywords, (image_name, title) in IMAGE_MAP.items():
@@ -120,12 +134,22 @@ def get_image(line):
             return f"{SAVE_PATH}imagify/{image_name}", title
 
     # default case
-    if len(line) > 40:
+    if len(line) > 40:  # Cuts the line at the 40th character to prevent formatting error
         line = line[:40]
     return SAVE_PATH + "imagify/brann_logo.png", line
 
 
-def generate_images(strings):
+def generate_images(strings: List[str]) -> List[str]:
+    """
+    Generates images based on the provided list of match titles.
+    For each string in the provided list, this function determines the appropriate image
+    and modifies the string's header.
+    Args:
+        strings (List[str]): A list of strings containing the match titles from ticketco.
+    Returns:
+        List[str]:
+            A list containing the paths to the generated images.
+    """
     iteration = 0
     image_paths = []
     for string in strings:
