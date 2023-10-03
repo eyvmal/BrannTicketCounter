@@ -57,7 +57,6 @@ def update_events(option: str) -> Optional[List[str]]:
 
     dir_path_to_tickets = []
     for event in event_list:
-        print("")
         if "none" in option.lower():
             dir_path_to_tickets.append(get_directory_path(str(event["title"])))
         elif "debug" in option.lower():
@@ -171,7 +170,7 @@ def get_ticket_info(event_url: str, event_title: str, event_date: str, debug: bo
     event_title = str(event_title).replace('\n', "")
     event_date = (str(event_date).replace('\n', "")
                   .replace('@', " @ "))
-    print("Updating ticket information for: " + event_title)
+    print("\nUpdating ticket information for: " + event_title)
     json_data = fetch_url(json_url).json()
 
     sections = [section["id"] for section in json_data["item_types"][0]["sections"]]
