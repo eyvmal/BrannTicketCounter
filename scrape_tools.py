@@ -19,8 +19,7 @@ session = requests.Session()
 # Prevents requests from looping forever
 retry_strategy = Retry(
     total=3,
-    status_forcelist=[429, 500, 502, 503, 504],
-    allowed_methods=["HEAD", "GET", "OPTIONS"]
+    status_forcelist=[429, 500, 502, 503, 504]
 )
 adapter = HTTPAdapter(max_retries=retry_strategy)
 session.mount("https://", adapter)

@@ -90,44 +90,39 @@ def get_font(size):
     return PIL.ImageFont.truetype(path, size=size)
 
 
+# ("keyword"): ("image_name", "title"),
+IMAGE_MAP = {
+    ("aalesund", "ålesund"): ("aalesund.png", "Brann - Aalesund"),
+    ("bodø",): ("bodoglimt.png", "Brann - Bodø/Glimt"),
+    ("godset",): ("godset.png", "Brann - Strømsgodset"),
+    ("hamkam", "hamar"): ("hamkam.png", "Brann - HamKam"),
+    ("haugesund",): ("haugesund.png", "Brann - Haugesund"),
+    ("lillestrøm",): ("lillestrom.png", "Brann - Lillestrøm"),
+    ("molde",): ("molde.png", "Brann - Molde"),
+    ("odd",): ("odd.png", "Brann - Odd"),
+    ("rosenborg",): ("rosenborg.png", "Brann - Rosenborg"),
+    ("sandefjord",): ("sandefjord.png", "Brann - Sandefjord"),
+    ("sarpsborg",): ("sarpsborg.png", "Brann - Sarpsborg"),
+    ("stabæk",): ("stabek.png", "Brann - Stabæk"),
+    ("tromsø",): ("tromso.png", "Brann - Tromsø"),
+    ("vålerenga",): ("valrengen.png", "Brann - Vålerenga"),
+    ("viking",): ("viking.png", "Brann - Viking"),
+    ("alkmaar",): ("alkmaar.png", "Brann - AZ Alkmaar"),
+    ("glasgow",): ("brann_logo.png", "UEFA CL Runde 2: Brann - Glasgow City"),
+}
+
+
 def get_image(line):
     line_lower = line.lower()
-    if "aalesund" in line_lower or "ålesund" in line_lower:
-        return SAVE_PATH + "imagify/aalesund.png", f"Brann - Aalesund"
-    elif "bodø" in line_lower:
-        return SAVE_PATH + "imagify/bodoglimt.png", f"Brann - Bodø/Glimt"
-    elif "godset" in line_lower:
-        return SAVE_PATH + "imagify/godset.png", f"Brann - Strømsgodset"
-    elif "hamkam" in line_lower or "hamar" in line_lower:
-        return SAVE_PATH + "imagify/hamkam.png", f"Brann - HamKam"
-    elif "haugesund" in line_lower:
-        return SAVE_PATH + "imagify/haugesund.png", f"Brann - Haugesund"
-    elif "lillestrøm" in line_lower:
-        return SAVE_PATH + "imagify/lillestrom.png", f"Brann - Lillestrøm"
-    elif "molde" in line_lower:
-        return SAVE_PATH + "imagify/molde.png", f"Brann - Molde"
-    elif "odd" in line_lower:
-        return SAVE_PATH + "imagify/odd.png", f"Brann - Odd"
-    elif "rosenborg" in line_lower:
-        return SAVE_PATH + "imagify/rosenborg.png", f"Brann - Rosenborg"
-    elif "sandefjord" in line_lower:
-        return SAVE_PATH + "imagify/sandefjord.png", f"Brann - Sandefjord"
-    elif "sarpsborg" in line_lower:
-        return SAVE_PATH + "imagify/sarpsborg.png", f"Brann - Sarpsborg"
-    elif "stabæk" in line_lower:
-        return SAVE_PATH + "imagify/stabek.png", f"Brann - Stabæk"
-    elif "tromsø" in line_lower:
-        return SAVE_PATH + "imagify/tromso.png", f"Brann - Tromsø"
-    elif "vålerenga" in line_lower:
-        return SAVE_PATH + "imagify/valrengen.png", f"Brann - Vålerenga"
-    elif "viking" in line_lower:
-        return SAVE_PATH + "imagify/viking.png", f"Brann - Viking"
-    elif "alkmaar" in line_lower:
-        return SAVE_PATH + "imagify/alkmaar.png", "Brann - AZ Alkmaar"
-    elif "brann - glasgow" in line_lower:
-        return SAVE_PATH + "imagify/brann_logo.png", "UEFA CL Runde 2: Brann - Glasgow City"
-    else:
-        return SAVE_PATH + "imagify/brann_logo.png", line
+
+    for keywords, (image_name, title) in IMAGE_MAP.items():
+        if any(keyword in line_lower for keyword in keywords):
+            return f"{SAVE_PATH}imagify/{image_name}", title
+
+    # default case
+    if len(line) > 40:
+        line = line[:40]
+    return SAVE_PATH + "imagify/brann_logo.png", line
 
 
 def generate_images(strings):
