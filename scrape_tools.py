@@ -324,7 +324,9 @@ def save_minimal_info(data: List[Dict], event_title: str, event_date: str) -> Di
     event_title_lower = event_title.lower()
     europa = False
     if "conference" in event_title_lower or "europa" in event_title_lower or "champions" in event_title_lower:
-        europa = True
+        # Looks like women matches still allow standing sections ... ??
+        if "women" not in event_title_lower and "kvinne" not in event_title_lower:
+            europa = True
 
     category_totals = {
         "GENERAL:": {"title": event_title, "date": event_date},
@@ -445,7 +447,8 @@ def create_string(dir_path: str) -> str:
 
         if prior is not None:
             prior_available_seats = prior[category]["available_seats"]
-            prior_sold_seats = total_capacity - prior_available_seats
+            prior_total_capacity = prior[category]["section_amount"]
+            prior_sold_seats = prior_total_capacity - prior_available_seats
 
             diff_sold_seats = sold_seats - prior_sold_seats
             if diff_sold_seats == 0:
