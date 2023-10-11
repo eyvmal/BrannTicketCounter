@@ -15,7 +15,9 @@ the script will assume 50% of "Store Stå" is sold too.
 
 I'm still figuring out how to factor in the standing sections
 for the "Fjordkraft" section.
+
 ---
+
 # Installation and setup
 To get started, you'll need to add your keys and tokens
 if you're looking to post on Twitter.
@@ -33,7 +35,9 @@ TWITTER_ACCESS_TOKEN_SECRET="your_key"
 ```
 If you've got your own way of doing things,
 tweak the twitter.py file as needed.
+
 ---
+
 # The Code
 **scrape_tools.py** heads to the event landing page at the
 "HOMEPAGE_URL" variable, sifting through the HTML for upcoming events.
@@ -43,13 +47,17 @@ Knowing the event URL and the section IDs, it shoots a GET request to each
 section to fetch all seating info. Using the seats, it calculates the amount
 of sold tickets. Once that's wrapped up, it saves everything locally and
 converts it to a tweet-friendly format.
+
 ---
+
 **imagify.py** takes a String input, put it onto an image,
 save it and return the image path.
 
 The code is pretty much a copy-paste of a [source I found on the web](https://rk.edu.pl/en/generating-memes-and-infographics-with-pillow/).
 I have modified it a bit to make it fit for my use (Colors, fonts and images).
+
 ---
+
 **twitter.py** is a simple file to connect to the Twitter 2.0 API.
 It will create and post Tweets having an input for the text I want
 in the Tweet title and an input for the images I want to attach to the
