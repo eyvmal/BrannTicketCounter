@@ -16,8 +16,6 @@ the script will assume 50% of "Store Stå" is sold too.
 I'm still figuring out how to factor in the standing sections
 for the "Fjordkraft" section.
 
----
-
 # Installation and setup
 To get started, you'll need to add your keys and tokens
 if you're looking to post on Twitter.
@@ -35,8 +33,6 @@ TWITTER_ACCESS_TOKEN_SECRET="your_key"
 ```
 If you've got your own way of doing things,
 tweak the twitter.py file as needed.
-
----
 
 # The Code
 **scrape_tools.py** heads to the event landing page at the
