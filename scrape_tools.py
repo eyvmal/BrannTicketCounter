@@ -101,7 +101,8 @@ def get_upcoming_events(next_or_all: str) -> List[Dict]:
         event_title = a_element.get_text()
 
         # Only process the actual matches (Strips the array for gift cards, package deals etc.)
-        if "brann -" in event_title.lower():
+        event_title_lower = event_title.lower()  # Temporary solution!
+        if "brann -" in event_title.lower() and "partoutkort" not in event_title_lower:
             try:
                 event_date_time = event.find("div", class_="tc-events-list--place-time").get_text(strip=True)
                 event_link = get_nested_link(a_element.get("href"))
@@ -359,7 +360,7 @@ def save_minimal_info(data: List[Dict], event_title: str, event_date: str) -> Di
             category_totals["SPV"]["section_amount"] += total_capacity
             if "press" not in section_name:
                 category_totals["SPV"]["available_seats"] += available_seats
-        elif "bob" in section_name:
+        elif "bob" in section_name or "bt" in section_name:
             category_totals["BT"]["sold_seats"] += sold_seats
             category_totals["BT"]["section_amount"] += total_capacity
             category_totals["BT"]["available_seats"] += available_seats
@@ -379,6 +380,9 @@ def save_minimal_info(data: List[Dict], event_title: str, event_date: str) -> Di
     if europa is False:
         percentage = round((category_totals["FRYDENBØ"]["sold_seats"] /
                             category_totals["FRYDENBØ"]["section_amount"]), 2)
+        # Store Stå do actually have 1007 seats, and not 1200.
+        # Frydenbø total capacity of 4316, given to me by Flatberg
+        # Seats -> 3309 found through scrape of Ticketco
         sold_seats = round(1200 * percentage)
         category_totals["FRYDENBØ"]["sold_seats"] += sold_seats
         category_totals["FRYDENBØ"]["section_amount"] += 1200

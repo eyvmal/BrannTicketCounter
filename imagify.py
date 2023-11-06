@@ -111,6 +111,7 @@ IMAGE_MAP = {
     ("viking",): ("viking.png", "Brann - Viking"),
     ("alkmaar",): ("alkmaar.png", "Brann - AZ Alkmaar"),
     ("glasgow",): ("brann_logo.png", "UEFA CL Runde 2: Brann - Glasgow City"),
+    ("praha",): ("brann_logo.png", "UEFA CL Group B: Brann - Slavia Praha"),
 }
 
 
