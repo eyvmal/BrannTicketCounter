@@ -48,7 +48,7 @@ def update_events(option: str) -> Optional[List[str]]:
     if option.lower() not in valid_options:
         raise ValueError(f"Invalid option: {option}. Valid options are: {', '.join(valid_options)}")
 
-    if option.lower() == "next" or option.lower() == "debug":
+    if option.lower() == "next":
         print("Starting update of the next event... ")
         event_list = get_upcoming_events("next")
     else:
@@ -61,13 +61,11 @@ def update_events(option: str) -> Optional[List[str]]:
             dir_path_to_tickets.append(get_directory_path(str(event["title"])))
         elif "debug" in option.lower():
             dir_path_to_tickets.append(get_ticket_info(event["link"], event["title"], event["time"], True))
-            print("Debug done.")
-            return None
         else:
             dir_path_to_tickets.append(get_ticket_info(event["link"], event["title"], event["time"], False))
     print("")
     finalized_strings = []
-    if len(dir_path_to_tickets) == 0:
+    if len(dir_path_to_tickets) == 0 or "debug" in option.lower():
         return None
 
     for path in dir_path_to_tickets:
@@ -101,8 +99,7 @@ def get_upcoming_events(next_or_all: str) -> List[Dict]:
         event_title = a_element.get_text()
 
         # Only process the actual matches (Strips the array for gift cards, package deals etc.)
-        event_title_lower = event_title.lower()  # Temporary solution!
-        if "brann -" in event_title.lower() and "partoutkort" not in event_title_lower:
+        if "brann -" in event_title.lower():
             try:
                 event_date_time = event.find("div", class_="tc-events-list--place-time").get_text(strip=True)
                 event_link = get_nested_link(a_element.get("href"))
