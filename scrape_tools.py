@@ -69,7 +69,10 @@ def update_events(option: str) -> Optional[List[str]]:
         return None
 
     for path in dir_path_to_tickets:
-        finalized_strings.append(create_string(path))
+        if "partoutkort" in path.lower() and "2023" in get_time_formatted("computer"):
+            finalized_strings.append(create_seasonpass_string(path))
+        else:
+            finalized_strings.append(create_string(path))
     return finalized_strings
 
 
@@ -464,4 +467,48 @@ def create_string(dir_path: str) -> str:
                              f"{percentage_sold:.1f}%\n")
     time_now = get_time_formatted("human")
     return_value += f"\n\nOppdatert: {time_now}\n "
+    return return_value
+
+
+def create_seasonpass_string(dir_path: str) -> str:
+    """Creates a formatted string with season pass information for a tweet.
+
+    The function generates a string with season pass information, including differences in pass sales
+    compared to the previous data point, ready to be posted as a tweet.
+    Args:
+        dir_path (str):
+            The path to the event directory.
+    Returns:
+        str:
+            A string containing the formatted season pass information.
+    """
+    latest, prior = get_latest_file(dir_path)
+    return_value = "SK Brann - Partoukort 2024"
+
+    for category, data in latest.items():
+        if category.lower() == "totalt":
+            return_value += "\n"
+
+            available_seats = data["available_seats"]
+            total_capacity = data["section_amount"]
+            sold_seats = total_capacity - available_seats
+
+            diff_sold_seats = 0
+            if prior is not None:
+                prior_available_seats = prior[category]["available_seats"]
+                prior_total_capacity = prior[category]["section_amount"]
+                prior_sold_seats = prior_total_capacity - prior_available_seats
+
+                diff_sold_seats = sold_seats - prior_sold_seats
+
+            return_value += (f"\nDet er solgt: {sold_seats - 8000}\n"
+                             f"{diff_sold_seats:+} endring fra sist")
+
+    time_now = get_time_formatted("human")
+    return_value += (f"\n\n\n(Den teller ikke partoutkort\n"
+                     f"som er blitt fornyet fra 2023.\n"
+                     f"Fra 1. januar kan jeg vise\n"
+                     f"et mer riktig totalt salg!)\n")
+    return_value += f"\nOppdatert: {time_now}\n "
+
     return return_value
