@@ -483,7 +483,7 @@ def create_seasonpass_string(dir_path: str) -> str:
             A string containing the formatted season pass information.
     """
     latest, prior = get_latest_file(dir_path)
-    return_value = "SK Brann - Partoukort 2024"
+    return_value = "SK Brann - Partoutkort 2024"
 
     for category, data in latest.items():
         if category.lower() == "totalt":
