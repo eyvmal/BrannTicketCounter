@@ -14,6 +14,12 @@ from typing import List, Dict, Union, Tuple, Optional
 
 HOMEPAGE_URL = "https://brann.ticketco.events/no/nb"
 SAVE_PATH = os.path.dirname(os.path.abspath(__file__)) + "/"
+CUSTOM_EVENTS = [{
+        "title": "Brann - Lyon",
+        "time": "21.12.2023 20:45@Åsane Arena",
+        "link": "https://ticketco.events/no/nb/events/382876/seating_arrangement/"
+    },
+]
 
 session = requests.Session()
 # Prevents requests from looping forever
@@ -64,12 +70,15 @@ def update_events(option: str) -> Optional[List[str]]:
         else:
             dir_path_to_tickets.append(get_ticket_info(event["link"], event["title"], event["time"], False))
     print("")
+
     finalized_strings = []
     if len(dir_path_to_tickets) == 0 or "debug" in option.lower():
         return None
 
     for path in dir_path_to_tickets:
-        if "partoutkort" in path.lower() and "2023" in get_time_formatted("computer"):
+        if "utsolgt" in path.lower():
+            finalized_strings.append(create_soldout_string(path))
+        elif "partoutkort" in path.lower() and "2023" in get_time_formatted("computer"):
             finalized_strings.append(create_seasonpass_string(path))
         else:
             finalized_strings.append(create_string(path))
@@ -113,6 +122,14 @@ def get_upcoming_events(next_or_all: str) -> List[Dict]:
                 })
             except AttributeError:
                 print("Failed to find links in event: The website structure may have changed.")
+
+    # Add custom events if any
+    for custom_event in CUSTOM_EVENTS:
+        event_list.append({
+            "title": custom_event["title"],
+            "time": custom_event["time"],
+            "link": custom_event["link"]
+        })
 
     if next_or_all.lower() == "next":
         event_list = [event_list[0]]
@@ -329,6 +346,15 @@ def save_minimal_info(data: List[Dict], event_title: str, event_date: str) -> Di
         if "women" not in event_title_lower and "kvinne" not in event_title_lower:
             europa = True
 
+    venue = get_venue_from_event_date(event_date)
+
+    if venue == "Brann Stadion":
+        return brann_stadion(data, event_title, event_date, europa)
+    elif venue == "Åsane Arena":
+        return aasane_arena(data, event_title, event_date)
+
+
+def brann_stadion(data: List[Dict], event_title: str, event_date: str, europa: bool) -> Dict:
     category_totals = {
         "GENERAL:": {"title": event_title, "date": event_date},
         "FRYDENBØ": {"sold_seats": 0, "section_amount": 0, "available_seats": 0},
@@ -377,7 +403,7 @@ def save_minimal_info(data: List[Dict], event_title: str, event_date: str) -> Di
             category_totals["VIP"]["section_amount"] += total_capacity
             category_totals["VIP"]["available_seats"] += available_seats
 
-    if europa is False:
+    if europa is False and category_totals["FRYDENBØ"]["section_amount"] > 0:
         percentage = round((category_totals["FRYDENBØ"]["sold_seats"] /
                             category_totals["FRYDENBØ"]["section_amount"]), 2)
         # Store Stå do actually have 1007 seats, and not 1200.
@@ -391,6 +417,48 @@ def save_minimal_info(data: List[Dict], event_title: str, event_date: str) -> Di
         category_totals["TOTALT"]["section_amount"] += 1200
         category_totals["TOTALT"]["available_seats"] += 1200 - sold_seats
     return category_totals
+
+
+def aasane_arena(data: List[Dict], event_title: str, event_date: str) -> Dict:
+    category_totals = {
+        "GENERAL:": {"title": event_title, "date": event_date},
+        "HOVED": {"sold_seats": 0, "section_amount": 0, "available_seats": 0},
+        "FAMILIE": {"sold_seats": 0, "section_amount": 0, "available_seats": 0},
+        "NORDRE": {"sold_seats": 0, "section_amount": 0, "available_seats": 0},
+        "TOTALT": {"sold_seats": 0, "section_amount": 0, "available_seats": 0}
+    }
+    json_file = [section for section in data]
+
+    for section in json_file:
+        # Add totals
+        category_totals["TOTALT"]["sold_seats"] += section["sold_seats"]
+        category_totals["TOTALT"]["section_amount"] += section["section_amount"]
+
+        section_name = section["section_name"].lower()
+        sold_seats = section["sold_seats"]
+        total_capacity = section["section_amount"]
+        available_seats = section["available_seats"]
+
+        if "hovedtribune" in section_name:
+            category_totals["HOVED"]["sold_seats"] += sold_seats
+            category_totals["HOVED"]["section_amount"] += total_capacity
+            category_totals["HOVED"]["available_seats"] += available_seats
+        elif "familietribune" in section_name:
+            category_totals["FAMILIE"]["sold_seats"] += sold_seats
+            category_totals["FAMILIE"]["section_amount"] += total_capacity
+            category_totals["FAMILIE"]["available_seats"] += available_seats
+        elif "nordre" in section_name:
+            category_totals["NORDRE"]["sold_seats"] += sold_seats
+            category_totals["NORDRE"]["section_amount"] += total_capacity
+            category_totals["NORDRE"]["available_seats"] += available_seats
+    return category_totals
+
+
+def get_venue_from_event_date(event_date: str) -> str:
+    """Extracts the venue from the event date string."""
+    venue_start_index = event_date.find("@") + 1
+    venue = event_date[venue_start_index:].strip()
+    return venue
 
 
 def get_latest_file(dir_path: str) -> Tuple[Dict, Optional[Dict]]:
@@ -483,7 +551,7 @@ def create_seasonpass_string(dir_path: str) -> str:
             A string containing the formatted season pass information.
     """
     latest, prior = get_latest_file(dir_path)
-    return_value = "SK Brann - Partoukort 2024"
+    return_value = "SK Brann - Partoutkort 2024"
 
     for category, data in latest.items():
         if category.lower() == "totalt":
@@ -502,7 +570,7 @@ def create_seasonpass_string(dir_path: str) -> str:
                 diff_sold_seats = sold_seats - prior_sold_seats
 
             return_value += (f"\nDet er solgt: {sold_seats - 8000}\n"
-                             f"{diff_sold_seats:+} endring fra sist")
+                             f"{diff_sold_seats:+} fra sist")
 
     time_now = get_time_formatted("human")
     return_value += (f"\n\n\n(Den teller ikke partoutkort\n"
@@ -512,3 +580,28 @@ def create_seasonpass_string(dir_path: str) -> str:
     return_value += f"\nOppdatert: {time_now}\n "
 
     return return_value
+
+
+def create_soldout_string(dir_path: str) -> str:
+    """Creates a formatted string with sold out information for a tweet.
+
+    The function generates a string that says sold out and is ready to be posted as a tweet.
+    Args:
+        dir_path (str):
+            The path to the event directory.
+    Returns:
+        str:
+            A string containing the formatted season pass information.
+    """
+    latest, prior = get_latest_file(dir_path)
+    return_value = ""
+
+    for category, data in latest.items():
+        if "GENERAL" in category:
+            return_value = data["title"] + "\n" + data["date"] + "\n\n"
+            return_value += "\n\n\n          UTSOLGT!!\n\n\n\n\n"
+
+            time_now = get_time_formatted("human")
+            return_value += f"\nOppdatert: {time_now}\n "
+
+            return return_value
