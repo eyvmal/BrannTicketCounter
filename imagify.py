@@ -1,12 +1,9 @@
 from typing import Tuple, List
 
-import PIL.Image
+from PIL import Image, ImageDraw, ImageFont
 import os
 import textwrap
 
-import PIL.Image
-import PIL.ImageDraw
-import PIL.ImageFont
 
 # Copy of code found here: https://rk.edu.pl/en/generating-memes-and-infographics-with-pillow/
 # Used to add text under a logo image
@@ -31,27 +28,26 @@ class Imagify:
             self.caption, text_color=self.TEXT_COLOR, text_size=95, image_width=image.size[0],
             background_color=self.BACKGROUND_COLOR)
         image = bottom_expand_image_with_image(image, text_image, background_color=self.BACKGROUND_COLOR)
-        image = draw_border(image, border_size=10, border_color=self.BACKGROUND_COLOR)
         print("DONE")
         return image
 
     def _get_image_object(self):
-        return PIL.Image.open(self.image_path)
+        return Image.open(self.image_path)
 
 
 def draw_border(image, border_size, border_color):
     original_width, original_height = image.size
     width = original_width + border_size * 2
     height = original_height + border_size * 2
-    border_canvas = PIL.Image.new('RGB', (width, height), border_color)
+    border_canvas = Image.new('RGB', (width, height), border_color)
     border_canvas.paste(image, (border_size, border_size))
     return border_canvas
 
 
 def get_text_as_image(text, text_color, text_size, image_width, background_color):
-    placeholder = PIL.Image.new('RGB', (0, 0), background_color)
+    placeholder = Image.new('RGB', (0, 0), background_color)
     font = get_font(size=text_size)
-    draw_canvas = PIL.ImageDraw.Draw(placeholder)
+    draw_canvas = ImageDraw.Draw(placeholder)
     text_width, text_height = draw_canvas.textsize(text, font=font)
     if text_width > image_width:
         print("Text too big")
@@ -62,8 +58,8 @@ def get_text_as_image(text, text_color, text_size, image_width, background_color
         text_lines = [text]
 
     total_text_height = len(text_lines) * text_height
-    image = PIL.Image.new('RGB', (image_width, total_text_height), background_color)
-    draw_canvas = PIL.ImageDraw.Draw(image)
+    image = Image.new('RGB', (image_width, total_text_height), background_color)
+    draw_canvas = ImageDraw.Draw(image)
 
     for row, line in enumerate(text_lines):
         row_height = row * text_height
@@ -76,7 +72,7 @@ def get_text_as_image(text, text_color, text_size, image_width, background_color
 def bottom_expand_image_with_image(image, expand_image, background_color):
     width = image.size[0]
     height = image.size[1] + expand_image.size[1]
-    expand_canvas = PIL.Image.new('RGB', (width, height), background_color)
+    expand_canvas = Image.new('RGB', (width, height), background_color)
     expand_canvas.paste(image, (0, 0))
     expand_canvas.paste(expand_image, (0, image.size[1]))
     return expand_canvas
@@ -89,56 +85,7 @@ def wrap_text(text, wrap_width):
 
 def get_font(size):
     path = os.path.join(SAVE_PATH + FONT_PATH)
-    return PIL.ImageFont.truetype(path, size=size)
-
-
-# ("keyword"): ("image_name", "title"),
-IMAGE_MAP = {
-    ("aalesund", "ålesund"): ("aalesund.png", "Brann - Aalesund"),
-    ("bodø",): ("bodoglimt.png", "Brann - Bodø/Glimt"),
-    ("godset",): ("godset.png", "Brann - Strømsgodset"),
-    ("hamkam", "hamar"): ("hamkam.png", "Brann - HamKam"),
-    ("haugesund",): ("haugesund.png", "Brann - Haugesund"),
-    ("lillestrøm",): ("lillestrom.png", "Brann - Lillestrøm"),
-    ("molde",): ("molde.png", "Brann - Molde"),
-    ("odd",): ("odd.png", "Brann - Odd"),
-    ("rosenborg",): ("rosenborg.png", "Brann - Rosenborg"),
-    ("sandefjord",): ("sandefjord.png", "Brann - Sandefjord"),
-    ("sarpsborg",): ("sarpsborg.png", "Brann - Sarpsborg"),
-    ("stabæk",): ("stabek.png", "Brann - Stabæk"),
-    ("tromsø",): ("tromso.png", "Brann - Tromsø"),
-    ("vålerenga",): ("valrengen.png", "Brann - Vålerenga"),
-    ("viking",): ("viking.png", "Brann - Viking"),
-    ("alkmaar",): ("alkmaar.png", "Brann - AZ Alkmaar"),
-    ("glasgow",): ("brann_logo.png", "UEFA CL Runde 2: Brann - Glasgow City"),
-    ("praha",): ("brann_logo.png", "UEFA CL Group B: Brann - Slavia Praha"),
-}
-
-
-def get_image(line: str) -> Tuple[str, str]:
-    """
-    Retrieves the associated image path and title based on keywords found in the provided line.
-    This function searches for keywords within the provided line. Based on these keywords,
-    it returns the corresponding image path and title. If no keyword is matched, a default
-    image and title (the line itself) is returned.
-    Args:
-        line (str): The line of text containing the match title from ticketco.
-    Returns:
-        Tuple[str, str]:
-            - The full path to the associated or default image.
-            - The title or header associated with the matched keyword or the truncated line itself.
-    """
-    line_lower = line.lower()
-
-    for keywords, (image_name, title) in IMAGE_MAP.items():
-        if any(keyword in line_lower for keyword in keywords):
-            return f"{SAVE_PATH}imagify/{image_name}", title
-
-    # default case
-    if len(line) > 40:  # Cuts the line at the 40th character to prevent formatting error
-        line = line[:40]
-    return SAVE_PATH + "imagify/brann_logo.png", line
-
+    return ImageFont.truetype(path, size=size)
 
 def generate_images(strings: List[str]) -> List[str]:
     """
@@ -168,3 +115,92 @@ def generate_images(strings: List[str]) -> List[str]:
         iteration += 1
         image_paths.append(image_name)
     return image_paths
+
+
+# ("keyword"): ("image_name", "title"),
+IMAGE_MAP = {
+    ("aalesund", "ålesund"): ("alesund.png", "Brann - Aalesund"),
+    ("bodø",): ("bodoglimt.png", "Brann - Bodø/Glimt"),
+    ("godset",): ("godset.png", "Brann - Strømsgodset"),
+    ("hamkam", "hamar"): ("hamkam.png", "Brann - HamKam"),
+    ("haugesund",): ("haugesund.png", "Brann - Haugesund"),
+    ("lillestrøm",): ("lillestrom.png", "Brann - Lillestrøm"),
+    ("molde",): ("molde.png", "Brann - Molde"),
+    ("odd",): ("odd.png", "Brann - Odd"),
+    ("rosenborg",): ("rosenborg.png", "Brann - Rosenborg"),
+    ("sandefjord",): ("sandefjord.png", "Brann - Sandefjord"),
+    ("sarpsborg",): ("sarpsborg.png", "Brann - Sarpsborg"),
+    ("stabæk",): ("stabek.png", "Brann - Stabæk"),
+    ("stabæk",): ("stabek.png", "Brann - Stabæk"),
+    ("strømsgodset",): ("stromsgodset.png", "Brann - Strømsgodset"),
+    ("tromsø",): ("tromso.png", "Brann - Tromsø"),
+    ("vålerenga",): ("valrenga.png", "Brann - Vålerenga"),
+    ("viking",): ("viking.png", "Brann - Viking"),
+    ("alkmaar",): ("alkmaar.png", "Brann - AZ Alkmaar"),
+    ("glasgow",): ("default.png", "UEFA CL Runde 2: Brann - Glasgow City"),
+    ("praha",): ("default.png", "UEFA CL Group B: Brann - Slavia Praha"),
+    ("lyon",): ("lyon.png", "UEFA CL Group B: Brann - Lyon"),
+}
+
+
+def get_image(line: str) -> Tuple[str, str]:
+    """
+    Retrieves the associated image path and title based on keywords found in the provided line.
+    This function searches for keywords within the provided line. Based on these keywords,
+    it returns the corresponding image path and title. If no keyword is matched, a default
+    image and title (the line itself) is returned.
+    Args:
+        line (str): The line of text containing the match title from ticketco.
+    Returns:
+        Tuple[str, str]:
+            - The full path to the associated or default image.
+            - The title or header associated with the matched keyword or the truncated line itself.
+    """
+    line_lower = line.lower()
+
+    for keywords, (image_name, title) in IMAGE_MAP.items():
+        if any(keyword in line_lower for keyword in keywords):
+            path1, path2 = f"{SAVE_PATH}imagify/brann.png", f"{SAVE_PATH}imagify/{image_name}"
+            return stitch_images(path1, path2), title
+
+    # default case
+    if len(line) > 40:  # Cuts the line at the 40th character to prevent formatting error
+        line = line[:40]
+    return SAVE_PATH + "imagify/default.png", line
+
+
+def stitch_images(image_path1, image_path2):
+    def paste_centered(image, canvas_size, background_color):
+        canvas = Image.new("RGB", canvas_size, background_color)
+        alpha = image.split()[3] if len(image.split()) == 4 else None
+        x_offset = (canvas_size[0] - image.width) // 2
+        y_offset = (canvas_size[1] - image.height) // 2
+        canvas.paste(image, (x_offset, y_offset), mask=alpha)
+        return canvas
+
+    def combine_horizontally(img1, img2, background_color):
+        new_width = img1.width + img2.width
+        new_height = max(img1.height, img2.height)
+
+        combined_image = Image.new("RGB", (new_width, new_height), background_color)
+        combined_image.paste(img1, (0, 0), mask=img1.split()[3] if len(img1.split()) == 4 else None)
+        combined_image.paste(img2, (img1.width, 0), mask=img2.split()[3] if len(img2.split()) == 4 else None)
+
+        return combined_image
+
+    image1 = Image.open(image_path1)
+    image2 = Image.open(image_path2)
+
+    CANVAS_SIZE = (1200, 1200)
+    BACKGROUND_COLOR = (227, 26, 34)
+
+    # Paste each image onto a blank canvas
+    canvas1 = paste_centered(image1, CANVAS_SIZE, BACKGROUND_COLOR)
+    canvas2 = paste_centered(image2, CANVAS_SIZE, BACKGROUND_COLOR)
+
+    # Combine the canvases horizontally
+    result_image = combine_horizontally(canvas1, canvas2, BACKGROUND_COLOR)
+
+    # Save or display the result
+    result_image.save(f"{SAVE_PATH}imagify/temp.png")  # Save the result to a file
+    return f"{SAVE_PATH}imagify/temp.png"
