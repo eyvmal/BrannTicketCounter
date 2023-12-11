@@ -4,7 +4,6 @@ from PIL import Image, ImageDraw, ImageFont
 import os
 import textwrap
 
-
 # Copy of code found here: https://rk.edu.pl/en/generating-memes-and-infographics-with-pillow/
 # Used to add text under a logo image
 
@@ -87,6 +86,7 @@ def get_font(size):
     path = os.path.join(SAVE_PATH + FONT_PATH)
     return ImageFont.truetype(path, size=size)
 
+
 def generate_images(strings: List[str]) -> List[str]:
     """
     Generates images based on the provided list of match titles.
@@ -120,26 +120,27 @@ def generate_images(strings: List[str]) -> List[str]:
 # ("keyword"): ("image_name", "title"),
 IMAGE_MAP = {
     ("aalesund", "ålesund"): ("alesund.png", "Brann - Aalesund"),
-    ("bodø",): ("bodoglimt.png", "Brann - Bodø/Glimt"),
-    ("godset",): ("godset.png", "Brann - Strømsgodset"),
+    "bodø": ("bodoglimt.png", "Brann - Bodø/Glimt"),
+    "fredrikstad": ("fredrikstad.png", "Brann - Fredrikstad"),
     ("hamkam", "hamar"): ("hamkam.png", "Brann - HamKam"),
-    ("haugesund",): ("haugesund.png", "Brann - Haugesund"),
-    ("lillestrøm",): ("lillestrom.png", "Brann - Lillestrøm"),
-    ("molde",): ("molde.png", "Brann - Molde"),
-    ("odd",): ("odd.png", "Brann - Odd"),
-    ("rosenborg",): ("rosenborg.png", "Brann - Rosenborg"),
-    ("sandefjord",): ("sandefjord.png", "Brann - Sandefjord"),
-    ("sarpsborg",): ("sarpsborg.png", "Brann - Sarpsborg"),
-    ("stabæk",): ("stabek.png", "Brann - Stabæk"),
-    ("stabæk",): ("stabek.png", "Brann - Stabæk"),
-    ("strømsgodset",): ("stromsgodset.png", "Brann - Strømsgodset"),
-    ("tromsø",): ("tromso.png", "Brann - Tromsø"),
-    ("vålerenga",): ("valrenga.png", "Brann - Vålerenga"),
-    ("viking",): ("viking.png", "Brann - Viking"),
-    ("alkmaar",): ("alkmaar.png", "Brann - AZ Alkmaar"),
-    ("glasgow",): ("default.png", "UEFA CL Runde 2: Brann - Glasgow City"),
-    ("praha",): ("default.png", "UEFA CL Group B: Brann - Slavia Praha"),
-    ("lyon",): ("lyon.png", "UEFA CL Group B: Brann - Lyon"),
+    "haugesund": ("haugesund.png", "Brann - Haugesund"),
+    "kfum": ("kfum.png", "Brann - KFUM Oslo"),
+    "kristiansund": ("kristiansund.png", "Brann - Kristiansund"),
+    "lillestrøm": ("lillestrom.png", "Brann - Lillestrøm"),
+    "molde": ("molde.png", "Brann - Molde"),
+    "odd": ("odd.png", "Brann - Odd"),
+    "rosenborg": ("rosenborg.png", "Brann - Rosenborg"),
+    "sandefjord": ("sandefjord.png", "Brann - Sandefjord"),
+    "sarpsborg": ("sarpsborg.png", "Brann - Sarpsborg"),
+    "stabæk": ("stabek.png", "Brann - Stabæk"),
+    "strømsgodset": ("stromsgodset.png", "Brann - Strømsgodset"),
+    "tromsø": ("tromso.png", "Brann - Tromsø"),
+    "vålerenga": ("valrenga.png", "Brann - Vålerenga"),
+    "viking": ("viking.png", "Brann - Viking"),
+    "alkmaar": ("alkmaar.png", "Brann - AZ Alkmaar"),
+    "glasgow": ("default.png", "UEFA CL Runde 2: Brann - Glasgow City"),
+    "praha": ("default.png", "UEFA CL Group B: Brann - Slavia Praha"),
+    "lyon": ("lyon.png", "UEFA CL Group B: Brann - Lyon"),
 }
 
 
@@ -170,6 +171,10 @@ def get_image(line: str) -> Tuple[str, str]:
 
 
 def stitch_images(image_path1, image_path2):
+    """
+    Method to stitch together two logos and return the path to a
+    temp_image where they're stitched together.
+    """
     def paste_centered(image, canvas_size, background_color):
         canvas = Image.new("RGB", canvas_size, background_color)
         alpha = image.split()[3] if len(image.split()) == 4 else None
@@ -191,15 +196,15 @@ def stitch_images(image_path1, image_path2):
     image1 = Image.open(image_path1)
     image2 = Image.open(image_path2)
 
-    CANVAS_SIZE = (1200, 1200)
-    BACKGROUND_COLOR = (227, 26, 34)
+    logo_size = (1200, 1200)
+    background_color_rgb = (227, 26, 34)
 
     # Paste each image onto a blank canvas
-    canvas1 = paste_centered(image1, CANVAS_SIZE, BACKGROUND_COLOR)
-    canvas2 = paste_centered(image2, CANVAS_SIZE, BACKGROUND_COLOR)
+    canvas1 = paste_centered(image1, logo_size, background_color_rgb)
+    canvas2 = paste_centered(image2, logo_size, background_color_rgb)
 
     # Combine the canvases horizontally
-    result_image = combine_horizontally(canvas1, canvas2, BACKGROUND_COLOR)
+    result_image = combine_horizontally(canvas1, canvas2, background_color_rgb)
 
     # Save or display the result
     result_image.save(f"{SAVE_PATH}imagify/temp.png")  # Save the result to a file
