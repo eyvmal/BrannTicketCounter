@@ -111,7 +111,7 @@ def generate_images(strings: List[str]) -> List[str]:
 
         # Create the images using the image path and the modified_string
         image_object = Imagify(os.path.join(image_path), modified_string).generate()
-        image_object.save(image_name, quality=90)
+        image_object.save(os.path.join(SAVE_PATH, image_name), quality=90)
         iteration += 1
         image_paths.append(image_name)
     return image_paths

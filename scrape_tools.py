@@ -551,7 +551,12 @@ def create_seasonpass_string(dir_path: str) -> str:
             A string containing the formatted season pass information.
     """
     latest, prior = get_latest_file(dir_path)
-    return_value = "SK Brann - Partoutkort 2024"
+    if "eliteserien" in dir_path.lower():
+        return_value = "Partoutkort Eliteserien 2024"
+    elif "toppserien" in dir_path.lower():
+        return_value = "Partoutkort Toppserien 2024"
+    else:
+        return "Error"
 
     for category, data in latest.items():
         if category.lower() == "totalt":
@@ -569,14 +574,22 @@ def create_seasonpass_string(dir_path: str) -> str:
 
                 diff_sold_seats = sold_seats - prior_sold_seats
 
-            return_value += (f"\nDet er solgt: {sold_seats - 8000}\n"
+            if "eliteserien" in dir_path.lower():
+                sold_seats -= 8000  # Remove last seasons partoutcards
+
+            return_value += (f"\nDet er solgt: {sold_seats}\n"
                              f"{diff_sold_seats:+} fra sist")
 
     time_now = get_time_formatted("human")
-    return_value += (f"\n\n\n(Den teller ikke partoutkort\n"
-                     f"som er blitt fornyet fra 2023.\n"
-                     f"Fra 1. januar kan jeg vise\n"
-                     f"et mer riktig totalt salg!)\n")
+
+    if "eliteserien" in dir_path.lower():
+        return_value += (f"\n\n\n(Den teller ikke partoutkort\n"
+                         f"som er blitt fornyet fra 2023.\n"
+                         f"Fra 1. januar kan jeg vise\n"
+                         f"et mer riktig totalt salg!\n)")
+    elif "toppserien" in dir_path.lower():
+        return_value += "\n\n\n\n\n\n\n"
+
     return_value += f"\nOppdatert: {time_now}\n "
 
     return return_value
