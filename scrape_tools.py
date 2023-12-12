@@ -586,7 +586,7 @@ def create_seasonpass_string(dir_path: str) -> str:
         return_value += (f"\n\n\n(Den teller ikke partoutkort\n"
                          f"som er blitt fornyet fra 2023.\n"
                          f"Fra 1. januar kan jeg vise\n"
-                         f"et mer riktig totalt salg!\n)")
+                         f"et mer riktig totalt salg!)\n")
     elif "toppserien" in dir_path.lower():
         return_value += "\n\n\n\n\n\n\n"
 
