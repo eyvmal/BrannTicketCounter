@@ -16,7 +16,7 @@ HOMEPAGE_URL = "https://brann.ticketco.events/no/nb"
 SAVE_PATH = os.path.dirname(os.path.abspath(__file__)) + "/"
 CUSTOM_EVENTS = [{
         "title": "Brann - Lyon",
-        "time": "21.12.2023 20:45@Åsane Arena",
+        "time": "21.12.2023 18:45@Åsane Arena",
         "link": "https://ticketco.events/no/nb/events/382876/seating_arrangement/"
     },
 ]
