@@ -142,6 +142,8 @@ IMAGE_MAP = {
     ("glasgow",): ("default.png", "UEFA CL Runde 2: Brann - Glasgow City"),
     ("praha",): ("default.png", "UEFA CL Group B: Brann - Slavia Praha"),
     ("lyon",): ("lyon.png", "UEFA CL Group B: Brann - Lyon"),
+    ("partoutkort eliteserien",): ("eliteserien_logo.png", "\nPartoutkort Eliteserien 2024"),
+    ("partoutkort toppserien",): ("toppserien_logo.png", "\nPartoutkort Toppserien 2024"),
 }
 
 
@@ -162,13 +164,15 @@ def get_image(line: str) -> Tuple[str, str]:
 
     for keywords, (image_name, title) in IMAGE_MAP.items():
         if any(keyword in line_lower for keyword in keywords):
+            if "partoutkort" in line_lower:
+                return f"{SAVE_PATH}imagify/{image_name}", title
             path1, path2 = f"{SAVE_PATH}imagify/brann.png", f"{SAVE_PATH}imagify/{image_name}"
             return stitch_images(path1, path2), title
 
     # default case
     if len(line) > 40:  # Cuts the line at the 40th character to prevent formatting error
         line = line[:40]
-    return SAVE_PATH + "imagify/default.png", line
+    return f"{SAVE_PATH}imagify/default.png", line
 
 
 def stitch_images(image_path1, image_path2):
