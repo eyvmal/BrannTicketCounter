@@ -1,4 +1,4 @@
-import datetime
+from datetime import datetime
 import re
 import pytz
 import requests
@@ -11,14 +11,14 @@ from requests.adapters import HTTPAdapter
 from urllib3.util.retry import Retry
 from typing import List, Dict, Union, Tuple, Optional
 
-
 HOMEPAGE_URL = "https://brann.ticketco.events/no/nb"
 SAVE_PATH = os.path.dirname(os.path.abspath(__file__)) + "/"
-CUSTOM_EVENTS = [{
-        "title": "Brann - Lyon",
-        "time": "21.12.2023 18:45@Åsane Arena",
-        "link": "https://ticketco.events/no/nb/events/382876/seating_arrangement/"
-    },
+CUSTOM_EVENTS = [
+    # {
+    #         "title": "Brann - Lyon",
+    #         "time": "21.12.2023 18:45@Åsane Arena",
+    #         "link": "https://ticketco.events/no/nb/events/382876/seating_arrangement/"
+    # },
 ]
 
 session = requests.Session()
@@ -78,7 +78,7 @@ def update_events(option: str) -> Optional[List[str]]:
     for path in dir_path_to_tickets:
         if "utsolgt" in path.lower():
             finalized_strings.append(create_soldout_string(path))
-        elif "partoutkort" in path.lower() and "2023" in get_time_formatted("computer"):
+        elif "partoutkort" in path.lower():
             finalized_strings.append(create_seasonpass_string(path))
         else:
             finalized_strings.append(create_string(path))
@@ -314,7 +314,7 @@ def get_time_formatted(computer_or_human: str) -> str:
             The formatted current time as a string.
     """
     norway_timezone = pytz.timezone("Europe/Oslo")
-    current_datetime = datetime.datetime.now(norway_timezone)
+    current_datetime = datetime.now(norway_timezone)
 
     if computer_or_human.lower() == "computer":
         return str(current_datetime.strftime("%Y-%m-%d_%H-%M-%S"))
@@ -528,7 +528,7 @@ def create_string(dir_path: str) -> str:
                                 f"{f''.ljust(7)} {percentage_sold:.1f}%\n"
             else:
                 return_value += f"{category.ljust(10)} {f'{sold_seats}/{total_capacity}'.ljust(12)}" \
-                            f"{f'{diff_sold_seats:+}'.ljust(7)} {percentage_sold:.1f}%\n"
+                                f"{f'{diff_sold_seats:+}'.ljust(7)} {percentage_sold:.1f}%\n"
 
         else:
             return_value += (f"{category.ljust(10)} {f'{sold_seats}/{total_capacity}'.ljust(12)} "
@@ -550,6 +550,9 @@ def create_seasonpass_string(dir_path: str) -> str:
         str:
             A string containing the formatted season pass information.
     """
+    # Add a check to see if it's still 2023 because of some changes at new yearsx
+    is_2023 = datetime.now().year == 2023
+
     if "eliteserien" in dir_path.lower():
         return_value = "Partoutkort Eliteserien"
     elif "toppserien" in dir_path.lower():
@@ -574,18 +577,20 @@ def create_seasonpass_string(dir_path: str) -> str:
 
                 diff_sold_seats = sold_seats - prior_sold_seats
 
-            if "eliteserien" in dir_path.lower():
+            if "eliteserien" in dir_path.lower() and is_2023:
                 sold_seats -= 8000  # Remove last seasons partoutcards
 
             return_value += (f"\nDet er solgt: {sold_seats}\n"
                              f"{diff_sold_seats:+} siden sist")
 
     # Info about how partoutcards are calculated.
-    if "eliteserien" in dir_path.lower():
+    if "eliteserien" in dir_path.lower() and is_2023:
         return_value += (f"\n\n\n(Den teller ikke partoutkort\n"
                          f"som er blitt fornyet fra 2023.\n"
                          f"Fra 1. januar kan jeg vise\n"
                          f"et mer riktig totalt salg!)\n")
+    elif "eliteserien" in dir_path.lower():
+        return_value += "\n\n\n\n\n\n\n"
     elif "toppserien" in dir_path.lower():
         return_value += "\n\n\n\n\n\n\n"
 
