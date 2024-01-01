@@ -550,9 +550,6 @@ def create_seasonpass_string(dir_path: str) -> str:
         str:
             A string containing the formatted season pass information.
     """
-    # Add a check to see if it's still 2023 because of some changes at new yearsx
-    is_2023 = datetime.now().year == 2023
-
     if "eliteserien" in dir_path.lower():
         return_value = "Partoutkort Eliteserien"
     elif "toppserien" in dir_path.lower():
@@ -560,6 +557,7 @@ def create_seasonpass_string(dir_path: str) -> str:
     else:
         return "Error"
 
+    sold_seats = 0
     latest, prior = get_latest_file(dir_path)
     for category, data in latest.items():
         if category.lower() == "totalt":
@@ -577,18 +575,14 @@ def create_seasonpass_string(dir_path: str) -> str:
 
                 diff_sold_seats = sold_seats - prior_sold_seats
 
-            if "eliteserien" in dir_path.lower() and is_2023:
-                sold_seats -= 8000  # Remove last seasons partoutcards
-
             return_value += (f"\nDet er solgt: {sold_seats}\n"
                              f"{diff_sold_seats:+} siden sist")
 
     # Info about how partoutcards are calculated.
-    if "eliteserien" in dir_path.lower() and is_2023:
-        return_value += (f"\n\n\n(Den teller ikke partoutkort\n"
-                         f"som er blitt fornyet fra 2023.\n"
-                         f"Fra 1. januar kan jeg vise\n"
-                         f"et mer riktig totalt salg!)\n")
+    if "eliteserien" in dir_path.lower() and sold_seats > 10000:
+        return_value += (f"\n\n\n(Inkluderer partoutkort fra\n"
+                         f"2023. Mer korrekte tall kommer\n"
+                         f"så fort de blir tilgjengelig.)\n\n")
     elif "eliteserien" in dir_path.lower():
         return_value += "\n\n\n\n\n\n\n"
     elif "toppserien" in dir_path.lower():
