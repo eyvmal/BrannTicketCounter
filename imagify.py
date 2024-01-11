@@ -142,6 +142,7 @@ IMAGE_MAP = {
     ("glasgow",): ("default.png", "UEFA CL Runde 2: Brann - Glasgow City"),
     ("praha",): ("default.png", "UEFA CL Group B: Brann - Slavia Praha"),
     ("lyon",): ("lyon.png", "UEFA CL Group B: Brann - Lyon"),
+    ("pölten",): ("polten.png", "UEFA CL Group B: Brann - St. Pölten"),
     ("partoutkort eliteserien",): ("eliteserien_logo.png", "\nPartoutkort Eliteserien 2024"),
     ("partoutkort toppserien",): ("toppserien_logo.png", "\nPartoutkort Toppserien 2024"),
 }

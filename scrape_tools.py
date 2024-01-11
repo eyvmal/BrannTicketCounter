@@ -433,6 +433,7 @@ def aasane_arena(data: List[Dict], event_title: str, event_date: str) -> Dict:
         # Add totals
         category_totals["TOTALT"]["sold_seats"] += section["sold_seats"]
         category_totals["TOTALT"]["section_amount"] += section["section_amount"]
+        category_totals["TOTALT"]["available_seats"] += section["available_seats"]
 
         section_name = section["section_name"].lower()
         sold_seats = section["sold_seats"]
@@ -577,9 +578,9 @@ def create_seasonpass_string(dir_path: str) -> str:
 
             return_value += (f"\nDet er solgt: {sold_seats}\n"
                              f"{diff_sold_seats:+} siden sist")
-
+    disclaimer = True
     # Info about how partoutcards are calculated.
-    if "eliteserien" in dir_path.lower() and sold_seats > 10000:
+    if "eliteserien" in dir_path.lower() and disclaimer:
         return_value += (f"\n\n\n(Inkluderer partoutkort fra\n"
                          f"2023. Mer korrekte tall kommer\n"
                          f"så fort de blir tilgjengelig.)\n\n")
