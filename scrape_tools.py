@@ -581,10 +581,9 @@ def create_seasonpass_string(dir_path: str) -> str:
     disclaimer = True
     # Info about how partoutcards are calculated.
     if "eliteserien" in dir_path.lower() and disclaimer:
-        return_value += (f"\n\n\n(Venter enda på at bedrifter\n"
-                         f"skal fornye kort. De har til\n"
-                         f"februar med å fornye. Siste\n"
-                         f"offisielle tall er 7048 solgte)\n")
+        return_value += (f"\n\n\n\n\n"
+                         f"(Siste offisielle\n"
+                         f"tall er 9000 solgte)\n")
     elif "eliteserien" in dir_path.lower():
         return_value += "\n\n\n\n\n\n\n"
     elif "toppserien" in dir_path.lower():
