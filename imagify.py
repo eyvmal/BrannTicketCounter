@@ -171,8 +171,8 @@ def get_image(line: str) -> Tuple[str, str]:
             return stitch_images(path1, path2), title
 
     # default case
-    if len(line) > 40:  # Cuts the line at the 40th character to prevent formatting error
-        line = line[:40]
+    if len(line) > 35:  # Cuts the line at the 40th character to prevent formatting error
+        line = line[:35]
     return f"{SAVE_PATH}imagify/default.png", line
 
 
