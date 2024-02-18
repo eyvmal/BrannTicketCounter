@@ -143,6 +143,7 @@ IMAGE_MAP = {
     ("praha",): ("default.png", "UEFA CL Group B: Brann - Slavia Praha"),
     ("lyon",): ("lyon.png", "UEFA CL Group B: Brann - Lyon"),
     ("pölten",): ("polten.png", "UEFA CL Group B: Brann - St. Pölten"),
+    ("barcelona",): ("barcelona_femini.png", "UEFA CL Kvartfinale: Brann - Barcelona"),
     ("partoutkort eliteserien",): ("eliteserien_logo.png", "\nPartoutkort Eliteserien 2024"),
     ("partoutkort toppserien",): ("toppserien_logo.png", "\nPartoutkort Toppserien 2024"),
 }
