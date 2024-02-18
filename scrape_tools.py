@@ -53,13 +53,12 @@ def update_events(option: str) -> Optional[List[str]]:
     valid_options = ["all", "next", "none", "debug"]
     if option.lower() not in valid_options:
         raise ValueError(f"Invalid option: {option}. Valid options are: {', '.join(valid_options)}")
-
-    if option.lower() == "next":
-        print("Starting update of the next event... ")
-        event_list = get_upcoming_events("next")
     else:
-        print("Starting update of all events... ")
-        event_list = get_upcoming_events("all")
+        print("Starting update of the next event... ")
+        if option.lower() == "next":
+            event_list = get_upcoming_events("next")
+        else:
+            event_list = get_upcoming_events("all")
 
     dir_path_to_tickets = []
     for event in event_list:
@@ -108,7 +107,7 @@ def get_upcoming_events(next_or_all: str) -> List[Dict]:
 
     for event in event_containers:
         a_element = event.find("a", class_="tc-events-list--title")
-        event_title = a_element.get_text()
+        event_title = a_element.get_text(strip=True)
 
         # Only process the actual matches (Strips the array for gift cards, package deals etc.)
         if "brann -" in event_title.lower():
@@ -121,7 +120,7 @@ def get_upcoming_events(next_or_all: str) -> List[Dict]:
                     "link": event_link
                 })
             except AttributeError:
-                print("Failed to find links in event: The website structure may have changed.")
+                print(f"\nFailed to find links for '${event_title}': The website structure may have changed.")
 
     # Add custom events if any
     for custom_event in CUSTOM_EVENTS:
@@ -368,12 +367,13 @@ def brann_stadion(data: List[Dict], event_title: str, event_date: str, europa: b
 
     for section in json_file:
         section_name = section["section_name"].lower()
-        if "fjordkraft" in section_name and "felt b" in section_name or "stå" in section_name:
+        if (("fjordkraft" in section_name and (
+                "felt a" in section_name or "felt b" in section_name or "stå" in section_name))
+                or "gangen" in section_name or "press" in section_name):
             continue
         category_totals["TOTALT"]["sold_seats"] += section["sold_seats"]
         category_totals["TOTALT"]["section_amount"] += section["section_amount"]
-        if "press" not in section_name:
-            category_totals["TOTALT"]["available_seats"] += section["available_seats"]
+        category_totals["TOTALT"]["available_seats"] += section["available_seats"]
 
     for section in json_file:
         section_name = section["section_name"].lower()
@@ -381,20 +381,20 @@ def brann_stadion(data: List[Dict], event_title: str, event_date: str, europa: b
         total_capacity = section["section_amount"]
         available_seats = section["available_seats"]
 
-        if "spv" in section_name:
+        if "spv" in section_name and "press" not in section_name:
             category_totals["SPV"]["sold_seats"] += sold_seats
             category_totals["SPV"]["section_amount"] += total_capacity
-            if "press" not in section_name:
-                category_totals["SPV"]["available_seats"] += available_seats
+            category_totals["SPV"]["available_seats"] += available_seats
         elif "bob" in section_name or "bt" in section_name:
             category_totals["BT"]["sold_seats"] += sold_seats
             category_totals["BT"]["section_amount"] += total_capacity
             category_totals["BT"]["available_seats"] += available_seats
-        elif "frydenbø" in section_name:
+        elif "frydenbø" in section_name and "gangen" not in section_name:
             category_totals["FRYDENBØ"]["sold_seats"] += sold_seats
             category_totals["FRYDENBØ"]["section_amount"] += total_capacity
             category_totals["FRYDENBØ"]["available_seats"] += available_seats
-        elif "fjordkraft" in section_name and "felt b" not in section_name and "stå" not in section_name:
+        elif "fjordkraft" in section_name and (
+                "felt a" in section_name or "felt b" in section_name or "stå" in section_name):
             category_totals["FJORDKRAFT"]["sold_seats"] += sold_seats
             category_totals["FJORDKRAFT"]["section_amount"] += total_capacity
             category_totals["FJORDKRAFT"]["available_seats"] += available_seats
@@ -406,16 +406,14 @@ def brann_stadion(data: List[Dict], event_title: str, event_date: str, europa: b
     if europa is False and category_totals["FRYDENBØ"]["section_amount"] > 0:
         percentage = round((category_totals["FRYDENBØ"]["sold_seats"] /
                             category_totals["FRYDENBØ"]["section_amount"]), 2)
-        # Store Stå do actually have 1007 seats, and not 1200.
-        # Frydenbø total capacity of 4316, given to me by Flatberg
-        # Seats -> 3309 found through scrape of Ticketco
-        sold_seats = round(1200 * percentage)
+
+        sold_seats = round(1000 * percentage)
         category_totals["FRYDENBØ"]["sold_seats"] += sold_seats
-        category_totals["FRYDENBØ"]["section_amount"] += 1200
-        category_totals["FRYDENBØ"]["available_seats"] += 1200 - sold_seats
+        category_totals["FRYDENBØ"]["section_amount"] += 1000
+        category_totals["FRYDENBØ"]["available_seats"] += 1000 - sold_seats
         category_totals["TOTALT"]["sold_seats"] += sold_seats
-        category_totals["TOTALT"]["section_amount"] += 1200
-        category_totals["TOTALT"]["available_seats"] += 1200 - sold_seats
+        category_totals["TOTALT"]["section_amount"] += 1000
+        category_totals["TOTALT"]["available_seats"] += 1000 - sold_seats
     return category_totals
 
 
@@ -564,26 +562,21 @@ def create_seasonpass_string(dir_path: str) -> str:
         if category.lower() == "totalt":
             return_value += "\n"
 
-            available_seats = data["available_seats"]
-            total_capacity = data["section_amount"]
-            sold_seats = total_capacity - available_seats
+            sold_seats = data["sold_seats"]
 
             diff_sold_seats = 0
             if prior is not None:
-                prior_available_seats = prior[category]["available_seats"]
-                prior_total_capacity = prior[category]["section_amount"]
-                prior_sold_seats = prior_total_capacity - prior_available_seats
+                prior_sold_seats = prior[category]["sold_seats"]
 
                 diff_sold_seats = sold_seats - prior_sold_seats
 
             return_value += (f"\nDet er solgt: {sold_seats}\n"
                              f"{diff_sold_seats:+} siden sist")
     disclaimer = True
-    # Info about how partoutcards are calculated.
     if "eliteserien" in dir_path.lower() and disclaimer:
-        return_value += (f"\n\n\n\n\n"
-                         f"(Siste offisielle\n"
-                         f"tall er 9000 solgte)\n")
+        return_value += (f"\n\n\n\n"
+                         f"\n(Siste offisielle tall er 9000"
+                         f"\nsolgte. Fra 12/02/24 10:54)\n")
     elif "eliteserien" in dir_path.lower():
         return_value += "\n\n\n\n\n\n\n"
     elif "toppserien" in dir_path.lower():
