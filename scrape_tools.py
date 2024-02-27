@@ -575,8 +575,8 @@ def create_seasonpass_string(dir_path: str) -> str:
     disclaimer = True
     if "eliteserien" in dir_path.lower() and disclaimer:
         return_value += (f"\n\n\n\n"
-                         f"\n(Siste offisielle tall er 9000"
-                         f"\nsolgte. Fra 12/02/24 10:54)\n")
+                         f"\n(Siste offisielle tall er 9600"
+                         f"\nsolgte. Postet 27/02/24 19:12)\n")
     elif "eliteserien" in dir_path.lower():
         return_value += "\n\n\n\n\n\n\n"
     elif "toppserien" in dir_path.lower():
