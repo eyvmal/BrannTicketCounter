@@ -573,8 +573,10 @@ def create_seasonpass_string(dir_path: str) -> str:
             return_value += (f"\nDet er solgt: {sold_seats}\n"
                              f"{diff_sold_seats:+} siden sist")
     disclaimer = True
+    remaining = max(0, 10100 - sold_seats)
     if "eliteserien" in dir_path.lower() and disclaimer:
-        return_value += (f"\n\n\n\n"
+        return_value += (f"\n"
+                         f"\nOmkring {remaining} billetter igjen!\n\n"
                          f"\n(Siste offisielle tall er 9600"
                          f"\nsolgte. Postet 27/02/24 19:12)\n")
     elif "eliteserien" in dir_path.lower():
