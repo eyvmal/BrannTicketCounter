@@ -394,7 +394,7 @@ def brann_stadion(data: List[Dict], event_title: str, event_date: str, europa: b
             category_totals["FRYDENBØ"]["section_amount"] += total_capacity
             category_totals["FRYDENBØ"]["available_seats"] += available_seats
         elif "fjordkraft" in section_name and (
-                "felt a" in section_name or "felt b" in section_name or "stå" in section_name):
+                "felt a" not in section_name or "felt b" not in section_name or "stå" not in section_name):
             category_totals["FJORDKRAFT"]["sold_seats"] += sold_seats
             category_totals["FJORDKRAFT"]["section_amount"] += total_capacity
             category_totals["FJORDKRAFT"]["available_seats"] += available_seats
@@ -575,10 +575,10 @@ def create_seasonpass_string(dir_path: str) -> str:
     disclaimer = True
     remaining = max(0, 10100 - sold_seats)
     if "eliteserien" in dir_path.lower() and disclaimer:
-        return_value += (f"\n"
-                         f"\nOmkring {remaining} billetter igjen!\n\n"
-                         f"\n(Siste offisielle tall er 9600"
-                         f"\nsolgte. Postet 27/02/24 19:12)\n")
+        return_value += (f"\n\n\n"
+                         f"\n(Siste offisielle tall er at"
+                         f"\ndet er 250 billetter igjen."
+                         f"\nPostet 04/03/24 20:17)\n")
     elif "eliteserien" in dir_path.lower():
         return_value += "\n\n\n\n\n\n\n"
     elif "toppserien" in dir_path.lower():
